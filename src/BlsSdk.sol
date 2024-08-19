@@ -7,6 +7,7 @@ import {BN254} from "./utils/BN254.sol";
 library BlsSdk {
     using BN254 for BN254.G1Point;
 
+    ///@notice the user of the library should initiate a storage variable that has been built on this struct
     struct State {
         mapping(address operatorAddress => bool exists) operatorExists;
         mapping(address operatorAddress => uint256 index) operatorIndex;
@@ -17,6 +18,10 @@ library BlsSdk {
         BN254.G1Point[] allOperatorPubkeyG1;
     }
 
+    ///@notice performs registration
+    ///@param state the state in which registration will take place
+    ///@param operator address of the operator that will be registered
+    ///@param extraData an abi encoded bytes field that contains g1 pubkey, g2 pubkey, message hash and the signature
     function operatorRegistration(State storage state, address operator, bytes memory extraData) external {
         (BN254.G1Point memory g1Pubkey, BN254.G2Point memory g2Pubkey, bytes32 msgHash, BN254.G1Point memory sign) =
             abi.decode(extraData, (BN254.G1Point, BN254.G2Point, bytes32, BN254.G1Point));
@@ -32,6 +37,9 @@ library BlsSdk {
         state.aggregatedG1Pubkey = state.aggregatedG1Pubkey.plus(g1Pubkey);
     }
 
+    ///@notice performs registration
+    ///@param state the state in which unregistration will take place
+    ///@param operator address of operator that will be unregistered
     function operatorUnregistration(State storage state, address operator) external {
         if (operator != state.operatorAddresses[state.operatorIndex[operator]]) revert OperatorAndIndexDontMatch();
         if (!state.operatorExists[operator]) revert OperatorIsNotRegistered();
@@ -53,6 +61,11 @@ library BlsSdk {
         state.aggregatedG1Pubkey = state.aggregatedG1Pubkey.plus(state.operatorG1Pubkey[operator].negate());
     }
 
+    ///@notice checks whether the paring is successful. i.e. the signature is valid
+    ///@param g1Key the public key on G1 field
+    ///@param g2Key the public key on G2 field 
+    ///@param sign the signature on G1 field
+    ///@param msgHash the message hash that has been signed
     function verifySignature(
         BN254.G1Point memory g1Key,
         BN254.G2Point memory g2Key,
@@ -78,10 +91,16 @@ library BlsSdk {
 
     /* ======= View Functions ======= */
 
+    ///@notice responds with whether the operator is registered or not
+    ///@param state the state in which the presence of operator will be checked
+    ///@param operator address of operator whose registration status will be checked
     function isOperatorRegistered(State storage state, address operator) external view returns (bool) {
         return state.operatorExists[operator];
     }
 
+
+    ///@notice returns an array of G1 public keys of all registered operators
+    ///@param state the state that will be used for the retireval of G1 public keys
     function allOperatorsG1(State storage state) external view returns (BN254.G1Point[] memory) {
         BN254.G1Point[] memory operators = new BN254.G1Point[](state.allOperatorPubkeyG1.length);
         for (uint256 i = 0; i < state.allOperatorPubkeyG1.length; i++) {
