@@ -63,7 +63,7 @@ library BlsSdk {
 
     ///@notice checks whether the paring is successful. i.e. the signature is valid
     ///@param g1Key the public key on G1 field
-    ///@param g2Key the public key on G2 field 
+    ///@param g2Key the public key on G2 field
     ///@param sign the signature on G1 field
     ///@param msgHash the message hash that has been signed
     function verifySignature(
@@ -97,7 +97,6 @@ library BlsSdk {
     function isOperatorRegistered(State storage state, address operator) external view returns (bool) {
         return state.operatorExists[operator];
     }
-
 
     ///@notice returns an array of G1 public keys of all registered operators
     ///@param state the state that will be used for the retireval of G1 public keys

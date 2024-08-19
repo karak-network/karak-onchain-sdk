@@ -6,45 +6,44 @@ import "./interfaces/IVault.sol";
 import "@openzeppelin/interfaces/IERC20.sol";
 import "@chainlink/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
-
 library OperatorStakeNormalized {
-
     ///@notice normalizes an array of operators stake according to the pricefeeds provided
-    ///@param operators: list of all operators to use for normalization
-    ///@param vaults: list of all vaults that are accepatble to the DSS
-    ///@param pricefeeds: list of pricefeeds which should be 1:1 with the vault
-    function totalStakeNormalized(address[] calldata operators, address[] calldata vaults, address[] calldata pricefeeds)
-        external
-        returns (uint256 totalStakeInETH)
-    {
+    ///@param operators list of all operators to use for normalization
+    ///@param vaults list of all vaults that are accepatble to the DSS
+    ///@param pricefeeds list of pricefeeds which should be 1:1 with the vault
+    function totalStakeNormalized(
+        address[] calldata operators,
+        address[] calldata vaults,
+        address[] calldata pricefeeds
+    ) external returns (uint256 totalStake) {
         for (uint256 i = 0; i < operators.length; i++) {
-            totalStakeStakeInETH += operatorNormalizedStakeToETH(operator[i], vaults, pricefeeds);
+            totalStake += operatorNormalizedStake(operators[i], vaults, pricefeeds);
         }
     }
 
     ///@notice normalizes an array of operators stake according to the pricefeed provided
-    ///@param operators: list of all operators to use for normalization
-    ///@param vaults: list of all vaults that are accepatble to the DSS
-    ///@param pricefeed: price to be used for all vaults
-    function totalStakeNormalized(address[] calldata operators, address[] calldata vaults, address calldata pricefeed)
+    ///@param operators list of all operators to use for normalization
+    ///@param vaults list of all vaults that are accepatble to the DSS
+    ///@param pricefeed price to be used for all vaults
+    function totalStakeNormalized(address[] calldata operators, address[] calldata vaults, address pricefeed)
         external
-        returns (uint256 totalStakeInETH)
+        returns (uint256 totalStake)
     {
         for (uint256 i = 0; i < operators.length; i++) {
-            totalStakeStakeInETH += operatorNormalizedStakeToETH(operator[i], vaults, pricefeed);
+            totalStake += operatorNormalizedStake(operators[i], vaults, pricefeed);
         }
     }
 
     ///@notice normalizes operator stake according to the pricefeeds provided
-    ///@param operators: list of all operators to use for normalization
-    ///@param vaults: list of all vaults that are accepatble to the DSS
-    ///@param pricefeed: price to be used for all vaults 
+    ///@param operator operator to use for normalization
+    ///@param vaults list of all vaults that are accepatble to the DSS
+    ///@param pricefeeds list of pricefeeds which should be 1:1 with the vault
     function operatorNormalizedStake(address operator, address[] calldata vaults, address[] calldata pricefeeds)
-       internal 
+        internal
         returns (uint256 totalNormalizedStake)
     {
         for (uint256 i = 0; i < vaults.length; i++) {
-            IVault vault = IVault(vault[i]);
+            IVault vault = IVault(vaults[i]);
             uint256 vaultAcitveAssets = vault.totalSupply() - IERC20(vault.asset()).balanceOf(address(vault));
             uint256 vaultValueInETH = getNormalizedPrice(pricefeeds[i], vaultAcitveAssets);
             totalNormalizedStake += vaultValueInETH;
@@ -52,15 +51,15 @@ library OperatorStakeNormalized {
     }
 
     ///@notice normalizes operator stake according to the pricefeed provided
-    ///@param operators: list of all operators to use for normalization
-    ///@param vaults: list of all vaults that are accepatble to the DSS
-    ///@param pricefeed: price to be used for all vaults 
-    function operatorNormalizedStake(address operator, address[] calldata vaults, address calldata pricefeed)
-        external
+    ///@param operator operator to use for normalization
+    ///@param vaults list of all vaults that are accepatble to the DSS
+    ///@param pricefeed price to be used for all vaults
+    function operatorNormalizedStake(address operator, address[] calldata vaults, address pricefeed)
+        internal
         returns (uint256 totalNormalizedStake)
     {
         for (uint256 i = 0; i < vaults.length; i++) {
-            IVault vault = IVault(vault[i]);
+            IVault vault = IVault(vaults[i]);
             uint256 vaultAcitveAssets = vault.totalSupply() - IERC20(vault.asset()).balanceOf(address(vault));
             uint256 vaultValueInETH = getNormalizedPrice(pricefeed, vaultAcitveAssets);
             totalNormalizedStake += vaultValueInETH;
@@ -68,22 +67,25 @@ library OperatorStakeNormalized {
     }
 
     ///@notice retrieves price using an oracle: using chainlink's aggregatorV3Interface
-    ///@param priceFeedAddress: address of the pricefeed to be used
-    ///@param tokenAmount: amount to be converted
+    ///@param priceFeedAddress address of the pricefeed to be used
+    ///@param tokenAmount amount to be converted
     function getNormalizedPrice(address priceFeedAddress, uint256 tokenAmount) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddress);
         (
-            /* uint80 roundID */,
-            int price,
-            /* uint startedAt */,
-            /* uint timeStamp */,
+            /* uint80 roundID */
+            ,
+            int256 price,
+            /* uint startedAt */
+            ,
+            /* uint timeStamp */
+            ,
             /* uint80 answeredInRound */
         ) = priceFeed.latestRoundData();
-        if (price <=0 ) revert InvalidPrice();
+        if (price <= 0) revert InvalidPrice();
 
         uint8 decimals = priceFeed.decimals();
-        
-        return (tokenAmount * uint256(price)) / (10**decimals);
+
+        return (tokenAmount * uint256(price)) / (10 ** decimals);
     }
 
     error InvalidPrice();
