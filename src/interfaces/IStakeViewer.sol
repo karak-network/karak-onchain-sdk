@@ -14,14 +14,19 @@ interface IStakeViewer {
         StakeComponent[] components;
     }
 
-    function getTotalStakeUSD(address dss) external view returns (uint256);
+    function getTotalStakeUSD(
+        address dss,
+        bytes calldata oracleSpecificData // arbitrary data that the oracle needs (eg: pull data for redstone)
+    ) external view returns (uint256);
 
     function getStakeDistributionUSD(
-        address dss
+        address dss,
+        bytes calldata oracleSpecificData
     ) external view returns (StakeDistribution memory);
 
     function getStakeDistributionUSDForOperators(
         address dss,
-        address[] calldata operators
+        address[] calldata operators,
+        bytes calldata oracleSpecificData
     ) external view returns (StakeDistribution[] memory);
 }
