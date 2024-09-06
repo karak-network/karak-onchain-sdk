@@ -14,6 +14,8 @@ interface IStakeViewer {
         StakeComponent[] components;
     }
 
+    function getTotalStakeUSD(address dss) external view returns (uint256);
+
     function getStakeDistributionUSD(
         address dss
     ) external view returns (StakeDistribution memory);
