@@ -11,7 +11,6 @@ library BlsSdk {
         mapping(address operatorAddress => bool exists) operatorExists;
         mapping(address operatorAddress => uint256 index) operatorIndex;
         address[] operatorAddresses;
-        address aggregator;
         BN254.G1Point aggregatedG1Pubkey;
         mapping(address operator => BN254.G1Point) operatorG1Pubkey;
         BN254.G1Point[] allOperatorPubkeyG1;
