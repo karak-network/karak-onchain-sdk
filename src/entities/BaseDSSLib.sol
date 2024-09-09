@@ -2,6 +2,7 @@
 pragma solidity ^0.8;
 
 import "@openzeppelin/utils/structs/EnumerableMap.sol";
+import "../interfaces/ICore.sol";
 
 library BaseDSSLib {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
@@ -10,7 +11,7 @@ library BaseDSSLib {
         /// @notice Mapping of operators to challengers they are enrolled in
         EnumerableMap.AddressToUintMap operatorState;
         /// @notice address of the core
-        address core;
+        ICore core;
     }
 
     function updateOperatorMap(State storage self, address operator, bool toAdd) internal {
@@ -25,7 +26,8 @@ library BaseDSSLib {
         operators = self.operatorState.keys();
     }
 
-    function init(State storage self, address _core) internal {
-        self.core = _core;
+    function init(State storage self, address _core, uint256 maxSlashablePercentageWad) internal {
+        self.core = ICore(_core);
+        ICore(_core).registerDSS(maxSlashablePercentageWad);
     }
 }

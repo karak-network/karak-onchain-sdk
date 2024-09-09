@@ -17,7 +17,7 @@ abstract contract BaseDSS is IDSS {
      * @param operator address of the operator
      */
     function registrationHook(address operator, bytes memory) external virtual onlyCore {
-        _self().updateOperatorMap(operator, true);
+        _baseDssState().updateOperatorMap(operator, true);
     }
 
     /**
@@ -27,13 +27,13 @@ abstract contract BaseDSS is IDSS {
      * @param operator address of the operator.
      */
     function unregistrationHook(address operator) external virtual onlyCore {
-        _self().updateOperatorMap(operator, false);
+        _baseDssState().updateOperatorMap(operator, false);
     }
 
     /* ============ View Functions ============ */
 
     function getRegisteredOperators() public virtual returns (address[] memory) {
-        return _self().getOperators();
+        return _baseDssState().getOperators();
     }
 
     function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
@@ -44,11 +44,17 @@ abstract contract BaseDSS is IDSS {
     }
 
     /* ============ Internal Functions ============ */
-    function _init(address core) internal {
-        _self().init(core);
+
+    /**
+     * @notice use this at the initializer or constructor
+     * @param core address of the core contract
+     * @param maxSlashablePercentageWad maximum slashable percentage wad that can be requested by DSS in each request
+     */
+    function _init(address core, uint256 maxSlashablePercentageWad) internal {
+        _baseDssState().init(core, maxSlashablePercentageWad);
     }
 
-    function _self() internal pure returns (BaseDSSLib.State storage $) {
+    function _baseDssState() internal pure returns (BaseDSSLib.State storage $) {
         assembly {
             $.slot := BASEDSS_STATE_SLOT
         }
@@ -56,7 +62,7 @@ abstract contract BaseDSS is IDSS {
 
     /* ============ Modifiers ============ */
     modifier onlyCore() {
-        if (msg.sender != _self().core) {
+        if (msg.sender != address(_baseDssState().core)) {
             revert CallerNotCore();
         }
         _;
