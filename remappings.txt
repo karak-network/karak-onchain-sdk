@@ -1,3 +1,4 @@
 @openzeppelin/=node_modules/@openzeppelin/contracts
 @chalink/=node_modules/@chainlink/contracts
 @chainlink/=node_modules/@chainlink/contracts
+forge-std/=lib/forge-std/src/
