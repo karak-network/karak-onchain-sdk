@@ -33,24 +33,11 @@ contract KarakStakeViewer is IStakeViewer, Ownable {
 
     /* EXTERNAL */
 
-    function setOracle(address erc20, Oracle memory oracle) external onlyOwner {
+    function setOracle(
+        address erc20,
+        Oracle calldata oracle
+    ) external onlyOwner {
         erc20ToOracle[erc20] = oracle;
-    }
-
-    function getTotalStakeUSD(
-        address dss,
-        bytes calldata oracleSpecificData
-    ) external view returns (uint256) {
-        // NOTE: BLOCKED due to not having a way to get the active operator list for a given DSS
-        // TODO
-    }
-
-    function getStakeDistributionUSD(
-        address dss,
-        bytes calldata oracleSpecificData
-    ) external view returns (IStakeViewer.StakeDistribution memory) {
-        // NOTE: BLOCKED due to not having a way to get the active operator list for a given DSS
-        // TODO
     }
 
     function getStakeDistributionUSDForOperators(
