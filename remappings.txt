@@ -1,2 +1,3 @@
-@openzeppelin/=node_modules/@openzeppelin/contracts/
-@chainlink/=node_modules/@chainlink/contracts/
+@openzeppelin/contracts=node_modules/@openzeppelin/contracts
+@openzeppelin/contracts-upgradeable=node_modules/@openzeppelin/contracts-upgradeable
+@chainlink/=node_modules/@chainlink/contracts

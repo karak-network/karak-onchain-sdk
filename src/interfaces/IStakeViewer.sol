@@ -8,15 +8,20 @@ interface IStakeViewer {
         uint256 usdValue;
     }
 
-    struct StakeDistribution {
+    struct OperatorStake {
+        address operator;
         uint256 totalUsdValue;
-        uint256 pctOfGlobalUSD;
         StakeComponent[] components;
+    }
+
+    struct StakeDistribution {
+        uint256 globalUsdValue;
+        OperatorStake[] operators;
     }
 
     function getStakeDistributionUSDForOperators(
         address dss,
         address[] calldata operators,
         bytes calldata oracleSpecificData
-    ) external view returns (StakeDistribution[] memory);
+    ) external view returns (StakeDistribution memory);
 }

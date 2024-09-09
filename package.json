@@ -1,7 +1,8 @@
 {
     "dependencies": {
         "@chainlink/contracts": "^1.2.0",
-        "@openzeppelin/contracts": "^5.0.2"
+        "@openzeppelin/contracts": "^5.0.2",
+        "@openzeppelin/contracts-upgradeable": "^5.0.2"
     },
     "packageManager": "pnpm@9.9.0"
 }
