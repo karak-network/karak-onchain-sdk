@@ -1,2 +1,2 @@
-@openzeppelin/=node_modules/@openzeppelin/contracts
-@chalink/=node_modules/@chainlink/contracts
+@openzeppelin/=node_modules/@openzeppelin/contracts/
+@chainlink/=node_modules/@chainlink/contracts/
