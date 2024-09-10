@@ -9,7 +9,7 @@ abstract contract BaseDSS is IDSS {
     using BaseDSSLib for BaseDSSLib.State;
 
     // keccak256(abi.encode(uint256(keccak256("basedss.state")) - 1)) & ~bytes32(uint256(0xff));
-    bytes32 internal constant BASEDSS_STATE_SLOT = 0x8814e3a199a7d4d18510abcafe7c07bd69c3920bf4c1a5d495d771ccc7597f00;
+    bytes32 internal constant BASE_DSS_STATE_SLOT = 0x8814e3a199a7d4d18510abcafe7c07bd69c3920bf4c1a5d495d771ccc7597f00;
 
     /* ============ Mutative Functions ============ */
     /**
@@ -17,17 +17,18 @@ abstract contract BaseDSS is IDSS {
      * @param operator address of the operator
      */
     function registrationHook(address operator, bytes memory) external virtual onlyCore {
-        _baseDssState().updateOperatorMap(operator, true);
+        _baseDssState().addOperator(operator);
     }
 
     /**
      * @notice unregistration happens form the protocol and `unregistrationHook` is called from the karak protocol.
-     * Delays are already introduced in the protcol for staking/unstaking vaults. To unregister operator needs to fully unstake.
+     * @notice Delays are already introduced in the protocol for staking/unstaking vaults.
+     * @notice To fully unregister an operator from a DSS, it first needs to fully unstake all the vaults from that DSS.
      * @dev Operator is unenrolled from all the challengers as `Challenger` had enough time to slash any operator during unstaking delay.
      * @param operator address of the operator.
      */
     function unregistrationHook(address operator) external virtual onlyCore {
-        _baseDssState().updateOperatorMap(operator, false);
+        _baseDssState().removeOperator(operator);
     }
 
     /* ============ View Functions ============ */
@@ -36,7 +37,7 @@ abstract contract BaseDSS is IDSS {
         return _baseDssState().getOperators();
     }
 
-    function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
+    function supportsInterface(bytes4 interfaceId) external pure virtual returns (bool) {
         if (interfaceId == IDSS.registrationHook.selector || interfaceId == IDSS.unregistrationHook.selector) {
             return true;
         }
@@ -56,7 +57,7 @@ abstract contract BaseDSS is IDSS {
 
     function _baseDssState() internal pure returns (BaseDSSLib.State storage $) {
         assembly {
-            $.slot := BASEDSS_STATE_SLOT
+            $.slot := BASE_DSS_STATE_SLOT
         }
     }
 

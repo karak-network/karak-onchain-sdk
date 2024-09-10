@@ -14,12 +14,12 @@ library BaseDSSLib {
         ICore core;
     }
 
-    function updateOperatorMap(State storage self, address operator, bool toAdd) internal {
-        if (toAdd) {
-            self.operatorState.set(operator, uint256(keccak256(abi.encode(operator))));
-        } else {
-            if (self.operatorState.contains(operator)) self.operatorState.remove(operator);
-        }
+    function addOperator(State storage self, address operator) internal {
+        self.operatorState.set(operator, uint256(keccak256(abi.encode(operator))));
+    }
+
+    function removeOperator(State storage self, address operator) internal {
+        if (self.operatorState.contains(operator)) self.operatorState.remove(operator);
     }
 
     function getOperators(State storage self) internal view returns (address[] memory operators) {
