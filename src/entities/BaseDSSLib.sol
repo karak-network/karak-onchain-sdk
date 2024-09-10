@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8;
 
-import "@openzeppelin/utils/structs/EnumerableMap.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import "../interfaces/ICore.sol";
 
 library BaseDSSLib {

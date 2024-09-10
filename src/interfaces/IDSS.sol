@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.25;
 
-import "@openzeppelin/interfaces/IERC165.sol";
+import "@openzeppelin/contracts/interfaces/IERC165.sol";
 
 interface IDSS is IERC165 {
     // HOOKS
