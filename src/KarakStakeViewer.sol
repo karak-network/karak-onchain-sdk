@@ -3,6 +3,7 @@ pragma solidity ^0.8;
 
 import "@chainlink/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
@@ -100,9 +101,14 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
 
             for (uint256 j = 0; j < vaults.length; j++) {
                 address asset = IKarakBaseVault(vaults[j]).asset();
-                uint256 assetBalance = IERC20Metadata(asset).balanceOf(
-                    vaults[j]
+
+                uint256 sharesNotQueuedForWithdrawal = IERC20Metadata(vaults[j])
+                    .totalSupply() -
+                    IERC20Metadata(vaults[j]).balanceOf(vaults[j]);
+                uint256 assetBalance = IERC4626(vaults[j]).convertToAssets(
+                    sharesNotQueuedForWithdrawal
                 );
+
                 uint256 assetUsdValue = convertToUSD(
                     asset,
                     assetBalance,
