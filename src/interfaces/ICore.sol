@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8;
 
-import "./IDSS.sol";
+import "./IBaseDSS.sol";
 
 interface ICore {
     /* ========== MUTATIVE FUNCTIONS ========== */
@@ -9,6 +9,6 @@ interface ICore {
     /* ======================================== */
 
     /* ============ VIEW FUNCTIONS ============ */
-    function fetchVaultsStakedInDSS(address operator, IDSS dss) external view returns (address[] memory vaults);
+    function fetchVaultsStakedInDSS(address operator, IBaseDSS dss) external view returns (address[] memory vaults);
     /* ======================================== */
 }
