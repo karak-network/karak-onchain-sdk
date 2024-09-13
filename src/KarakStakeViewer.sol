@@ -87,7 +87,7 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
             // TODO: Account for entire Vaults being unstaked
             address[] memory vaults = _state().core.fetchVaultsStakedInDSS(
                 operators[i],
-                dss
+                IBaseDSS(dss)
             );
 
             if (vaults.length == 0) {
