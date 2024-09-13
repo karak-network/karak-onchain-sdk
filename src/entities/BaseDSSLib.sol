@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8;
 
-import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "../interfaces/ICore.sol";
 
 library BaseDSSLib {
-    using EnumerableMap for EnumerableMap.AddressToUintMap;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     struct State {
-        /// @notice Mapping of operators to challengers they are enrolled in
-        EnumerableMap.AddressToUintMap operatorState;
+        /// @notice Set of operators registered with DSS
+        EnumerableSet.AddressSet operatorState;
         /// @notice address of the core
         ICore core;
     }
 
     function addOperator(State storage self, address operator) internal {
-        self.operatorState.set(operator, uint256(keccak256(abi.encode(operator))));
+        self.operatorState.add(operator);
     }
 
     function removeOperator(State storage self, address operator) internal {
@@ -23,7 +23,7 @@ library BaseDSSLib {
     }
 
     function getOperators(State storage self) internal view returns (address[] memory operators) {
-        operators = self.operatorState.keys();
+        operators = self.operatorState.values();
     }
 
     function init(State storage self, address _core, uint256 maxSlashablePercentageWad) internal {
