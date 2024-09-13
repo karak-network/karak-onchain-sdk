@@ -22,7 +22,7 @@ abstract contract BaseDSS is IBaseDSS {
     }
 
     /**
-     * @notice unregistration happens form the core and `unregistrationHook` is called from the core.
+     * @notice unregistration happens from the core and `unregistrationHook` is called from the core.
      * @notice Delays are already introduced in the core for staking/unstaking vaults.
      * @notice To fully unregister an operator from a DSS, it first needs to fully unstake all the vaults from that DSS.
      * @param operator address of the operator.
