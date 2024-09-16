@@ -1,0 +1,67 @@
+name: Sync ABI and Bytecode (Cross-Repo)
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+
+jobs:
+    sync-abi-bytecode:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            pull-requests: write
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+
+            - uses: pnpm/action-setup@v3
+              name: Install pnpm
+              with:
+                  version: 8
+                  run_install: false
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+
+            - name: Install modules
+              run: pnpm install
+
+            - name: Build contracts
+              run: |
+                  forge build
+
+            - name: Push ABI and open PR
+              env:
+                  GH_TOKEN: ${{ secrets.CI_PAT }}
+              run: |
+                  REPOSITORY="karak-network/karak-rs"
+                  BRANCH_NAME="onchain-sdk-update-abi-bytecode-$(date +%Y%m%d%H%M%S)"
+
+                  # Clone the target repository
+                  git clone --depth=1 --branch=main https://x-access-token:${GH_TOKEN}@github.com/${REPOSITORY} target_repo
+                  cd target_repo
+
+                  git config user.email "github-actions@github.com"
+                  git config user.name "GitHub Actions"
+
+                  git checkout -b $BRANCH_NAME
+
+                  jq '.abi' ../out/IStakeViewer.sol/IStakeViewer.json | jq '.' > crates/contracts/abi/IStakeViewer.json
+
+                  git add .
+                  git commit -m "Update onchain SDK ABIs"
+                  git push -u origin $BRANCH_NAME
+
+                  gh pr create \
+                    --title "Update onchain SDK ABIs" \
+                    --head "$BRANCH_NAME" \
+                    --base "main"
