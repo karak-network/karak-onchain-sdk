@@ -74,7 +74,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @param operator The address of the operator whose vaults are being fetched.
      * @return An array of vault addresses that are not queued for withdrawal.
      */
-    function getVaultsNotQueuedForUnstaking(address operator) public virtual returns (address[] memory) {
+    function getActiveVaults(address operator) public virtual returns (address[] memory) {
         return operator.fetchVaultsNotQueuedForWithdrawal();
     }
 

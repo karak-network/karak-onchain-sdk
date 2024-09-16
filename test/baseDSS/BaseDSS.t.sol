@@ -65,18 +65,18 @@ contract BaseDSSTest is OperatorHelper {
         vm.assume(vault != address(0) && operator != address(0));
         requestVaultStakeUpdateRequest(operator, dss, vault, true);
         // vault isn't added in the state when staking in requested
-        dss.getVaultsNotQueuedForUnstaking(operator).assertEq(new address[](0));
+        dss.getActiveVaults(operator).assertEq(new address[](0));
 
         completeVaultStakeUpdateRequest(operator, dss, vault, true);
         address[] memory expectedVaults = new address[](1);
         expectedVaults[0] = vault;
         // vault gets added in the state when staking in completed
-        dss.getVaultsNotQueuedForUnstaking(operator).assertEq(expectedVaults);
+        dss.getActiveVaults(operator).assertEq(expectedVaults);
 
         // testing random address should give zero result
         address newOperator = vm.randomAddress();
 
-        dss.getVaultsNotQueuedForUnstaking(newOperator).assertEq(new address[](0));
+        dss.getActiveVaults(newOperator).assertEq(new address[](0));
     }
 
     function test_stake_vault_in_multiple_operators(uint256 numOfOperators) public {
@@ -96,7 +96,7 @@ contract BaseDSSTest is OperatorHelper {
         for (uint256 i = 0; i < vaults.length; i++) {
             updateVaultStakeIntoDSS(operator, dss, vaults[i], true);
         }
-        vaults.assertEq(dss.getVaultsNotQueuedForUnstaking(operator));
+        vaults.assertEq(dss.getActiveVaults(operator));
     }
 
     function test_multiple_operators_multiple_vaults(uint256 numOfOperators, uint256 numOfVaults) public {
@@ -115,12 +115,12 @@ contract BaseDSSTest is OperatorHelper {
         updateVaultStakeIntoDSS(operator, dss, vault, true);
         address[] memory expectedResult = new address[](1);
         expectedResult[0] = vault;
-        dss.getVaultsNotQueuedForUnstaking(operator).assertEq(expectedResult);
+        dss.getActiveVaults(operator).assertEq(expectedResult);
 
         // initiate request to unstake vault
         requestVaultStakeUpdateRequest(operator, dss, vault, false);
         expectedResult = new address[](0);
-        dss.getVaultsNotQueuedForUnstaking(operator).assertEq(expectedResult);
+        dss.getActiveVaults(operator).assertEq(expectedResult);
     }
 
     function test_unstake_subset_of_staked_vault(
@@ -147,7 +147,7 @@ contract BaseDSSTest is OperatorHelper {
         for (uint256 i = 0; i < unstakedVaults.length; i++) {
             requestVaultStakeUpdateRequest(operator, dss, unstakedVaults[i], false);
         }
-        dss.getVaultsNotQueuedForUnstaking(operator).assertEq(expectedResult);
+        dss.getActiveVaults(operator).assertEq(expectedResult);
     }
 
     function test_jailing_unjailing(address operator) public {
