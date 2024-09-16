@@ -63,5 +63,6 @@ jobs:
 
                   gh pr create \
                     --title "Update onchain SDK ABIs" \
+                    --body "This PR updates the ABI files from the onchain SDK repo." \
                     --head "$BRANCH_NAME" \
                     --base "main"
