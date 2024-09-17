@@ -58,7 +58,7 @@ jobs:
                   jq '.abi' ../out/IStakeViewer.sol/IStakeViewer.json | jq '.' > crates/contracts/abi/IStakeViewer.json
 
                   git add .
-                  git commit -m "Update onchain SDK ABIs"
+                  git commit -m "feat(contracts): update onchain SDK ABIs"
                   git push -u origin $BRANCH_NAME
 
                   gh pr create \
