@@ -6,7 +6,7 @@ import "../../src/BaseDSS.sol";
 contract TestDSS is BaseDSS {
     using OperatorLib for address;
 
-    constructor(address core, uint256 maxSlashablePercentageWad) {
+    function initialize(address core, uint256 maxSlashablePercentageWad) public {
         _init(core, maxSlashablePercentageWad);
     }
 
@@ -18,7 +18,7 @@ contract TestDSS is BaseDSS {
         _unjailOperator(operator);
     }
 
-    function isOperatorJailed(address operator) public view returns (bool) {
+    function isOperatorJailed(address operator) public view override returns (bool) {
         return operator.isOperatorJailed();
     }
 }

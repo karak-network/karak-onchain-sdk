@@ -24,8 +24,10 @@ interface IBaseDSS is IERC165 {
     function finishUpdateStakeHook(address operator, QueuedStakeUpdate memory queuedStakeUpdate) external;
 
     // VIEW FUNCTIONS
-    function getRegisteredOperators() external returns (address[] memory);
-    function getActiveVaults(address operator) external returns (address[] memory);
+    function getRegisteredOperators() external view returns (address[] memory);
+    function getActiveVaults(address operator) external view returns (address[] memory);
+    function isOperatorRegistered(address operator) external view returns (bool);
+    function isOperatorJailed(address operator) external view returns (bool);
 
     error CallerNotCore();
 }

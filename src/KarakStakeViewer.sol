@@ -10,6 +10,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interfaces/IStakeViewer.sol";
 import "./interfaces/IKarakBaseVault.sol";
 import "./interfaces/ICore.sol";
+import "./interfaces/IBaseDSS.sol";
 
 enum OracleType {
     None,
@@ -33,8 +34,7 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
     string public constant VERSION = "1.0.0";
 
     // keccak256(abi.encode(uint256(keccak256("KarakStakeViewer.storage")) - 1)) & ~bytes32(uint256(0xff));
-    bytes32 internal constant STORAGE_SLOT =
-        0x74a1c1ab07dcbc734f35890c979db16e8a2873322b1ed7b823ac27aedd593500;
+    bytes32 internal constant STORAGE_SLOT = 0x74a1c1ab07dcbc734f35890c979db16e8a2873322b1ed7b823ac27aedd593500;
 
     /* STORAGE */
 
@@ -62,10 +62,7 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
 
     /* EXTERNAL */
 
-    function setOracle(
-        address token,
-        Oracle calldata oracle
-    ) external onlyOwner {
+    function setOracle(address token, Oracle calldata oracle) external onlyOwner {
         _state().tokenToOracle[token] = oracle;
     }
 
@@ -77,54 +74,35 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
     ) external view returns (IStakeViewer.StakeDistribution memory) {
         IStakeViewer.StakeDistribution memory stakeDistribution;
         stakeDistribution.globalUsdValue = 0;
-        stakeDistribution.operators = new IStakeViewer.OperatorStake[](
-            operators.length
-        );
+        stakeDistribution.operators = new IStakeViewer.OperatorStake[](operators.length);
 
         for (uint256 i = 0; i < operators.length; i++) {
             stakeDistribution.operators[i].operator = operators[i];
 
             // TODO: Account for entire Vaults being unstaked
-            address[] memory vaults = _state().core.fetchVaultsStakedInDSS(
-                operators[i],
-                IBaseDSS(dss)
-            );
+            address[] memory vaults = IBaseDSS(dss).getActiveVaults(operators[i]);
 
             if (vaults.length == 0) {
                 continue;
             }
 
-            stakeDistribution
-                .operators[i]
-                .components = new IStakeViewer.StakeComponent[](vaults.length);
+            stakeDistribution.operators[i].components = new IStakeViewer.StakeComponent[](vaults.length);
 
             uint256 operatorUsdValue = 0;
 
             for (uint256 j = 0; j < vaults.length; j++) {
                 address asset = IKarakBaseVault(vaults[j]).asset();
 
-                uint256 sharesNotQueuedForWithdrawal = IERC20Metadata(vaults[j])
-                    .totalSupply() -
-                    IERC20Metadata(vaults[j]).balanceOf(vaults[j]);
-                uint256 assetBalance = IERC4626(vaults[j]).convertToAssets(
-                    sharesNotQueuedForWithdrawal
-                );
+                uint256 sharesNotQueuedForWithdrawal =
+                    IERC20Metadata(vaults[j]).totalSupply() - IERC20Metadata(vaults[j]).balanceOf(vaults[j]);
+                uint256 assetBalance = IERC4626(vaults[j]).convertToAssets(sharesNotQueuedForWithdrawal);
 
-                uint256 assetUsdValue = convertToUSD(
-                    asset,
-                    assetBalance,
-                    oracleSpecificData
-                );
+                uint256 assetUsdValue = convertToUSD(asset, assetBalance, oracleSpecificData);
 
                 stakeDistribution.operators[i].components[j].erc20 = asset;
-                stakeDistribution
-                    .operators[i]
-                    .components[j]
-                    .balance = assetBalance;
-                stakeDistribution
-                    .operators[i]
-                    .components[j]
-                    .usdValue = assetUsdValue;
+                stakeDistribution.operators[i].components[j].vault = vaults[j];
+                stakeDistribution.operators[i].components[j].balance = assetBalance;
+                stakeDistribution.operators[i].components[j].usdValue = assetUsdValue;
 
                 operatorUsdValue += assetUsdValue;
             }
@@ -139,49 +117,37 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
 
     /* INTERNAL */
 
-    function convertToUSD(
-        address token,
-        uint256 amount,
-        bytes calldata oracleSpecificData
-    ) internal view returns (uint256) {
+    function convertToUSD(address token, uint256 amount, bytes calldata oracleSpecificData)
+        internal
+        view
+        returns (uint256)
+    {
         Oracle memory oracle = _state().tokenToOracle[token];
 
         if (oracle.oracleType == OracleType.Chainlink) {
-            ChainlinkOracle memory chainlinkOracle = abi.decode(
-                oracle.oracle,
-                (ChainlinkOracle)
-            );
+            ChainlinkOracle memory chainlinkOracle = abi.decode(oracle.oracle, (ChainlinkOracle));
 
             // TODO: Add checks and balances here to ensure the oracle and oracle data is valid
 
-            (, int256 assetPrice, , , ) = chainlinkOracle
-                .dataFeedAggregator
-                .latestRoundData();
+            (, int256 assetPrice,,,) = chainlinkOracle.dataFeedAggregator.latestRoundData();
 
             uint8 assetDecimals = IERC20Metadata(token).decimals();
 
-            uint8 oracleDecimals = chainlinkOracle
-                .dataFeedAggregator
-                .decimals();
+            uint8 oracleDecimals = chainlinkOracle.dataFeedAggregator.decimals();
 
             // TODO: Is this the right way to convert to USD?
             // convertToUSD(10 USDC) = (10e6 USDC.raw * 1e8 USD.raw) / 1e6 = 10e8 USD.raw = 10 USD
             // convertToUSD(1 ETH) = (1e18 ETH.raw * 2000e8 USD.raw) / 1e18 = 2000e8 USD.raw = 2000 USD
             // So, we can do: convertToUSD(10 USDC) + convertToUSD(1 ETH) = 10 USD + 2000 USD = 2010 USD
 
-            uint256 oracleUsdValue = (amount * uint256(assetPrice)) /
-                (10 ** assetDecimals);
+            uint256 oracleUsdValue = (amount * uint256(assetPrice)) / (10 ** assetDecimals);
 
             uint256 normalizedUsdValue;
 
             if (oracleDecimals > USD_DECIMALS) {
-                normalizedUsdValue =
-                    oracleUsdValue /
-                    (10 ** (oracleDecimals - USD_DECIMALS));
+                normalizedUsdValue = oracleUsdValue / (10 ** (oracleDecimals - USD_DECIMALS));
             } else {
-                normalizedUsdValue =
-                    oracleUsdValue *
-                    (10 ** (USD_DECIMALS - oracleDecimals));
+                normalizedUsdValue = oracleUsdValue * (10 ** (USD_DECIMALS - oracleDecimals));
             }
 
             return normalizedUsdValue;
