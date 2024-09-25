@@ -8,16 +8,15 @@ import "../helpers/Utils.sol";
 contract BaseDSSTest is OperatorHelper {
     using CommonUtils for address[];
 
-    IBaseDSS dss;
+    TestDSS dss;
     uint256 maxSlashablePercentageWad = 30 * (10 ** 18);
-
-    // Upper limit to operator count
-    uint256 internal constant OPERATOR_LIMIT = 113;
-    uint256 internal constant VAULT_LIMIT = 32;
+    address proxyOwner;
 
     function setUp() public {
+        proxyOwner = vm.randomAddress();
         vm.mockCall(core, abi.encodeCall(ICore.registerDSS, maxSlashablePercentageWad), "");
-        dss = IBaseDSS(address(new TestDSS(core, maxSlashablePercentageWad)));
+        dss = TestDSS(CommonUtils.deployProxy(proxyOwner, address(new TestDSS()), ""));
+        dss.initialize(core, maxSlashablePercentageWad);
     }
 
     function test_registration(uint256 operatorCount) public {

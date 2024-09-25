@@ -30,4 +30,8 @@ library BaseDSSLib {
         self.core = ICore(_core);
         ICore(_core).registerDSS(maxSlashablePercentageWad);
     }
+
+    function isOperatorRegistered(State storage self, address operator) internal view returns (bool) {
+        return self.operatorState.contains(operator);
+    }
 }

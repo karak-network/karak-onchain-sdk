@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+
 library CommonUtils {
     /// Sorts the array using quick sort inplace
     /// @param arr Array to sort
@@ -36,6 +38,10 @@ library CommonUtils {
         sortArr(arr1);
         sortArr(arr2);
         if (keccak256(abi.encode((arr1))) != keccak256(abi.encode(arr2))) revert UnequalArrays();
+    }
+
+    function deployProxy(address owner, address implementation, bytes memory data) public returns (address) {
+        return address(new TransparentUpgradeableProxy(implementation, owner, data));
     }
 
     error UnequalArrays();

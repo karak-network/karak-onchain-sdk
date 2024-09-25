@@ -7,6 +7,9 @@ import "./TestDSS.sol";
 abstract contract OperatorHelper is Test {
     address core = address(11);
     uint48 nonce = 0;
+    // Upper limit to operator count
+    uint256 internal constant OPERATOR_LIMIT = 113;
+    uint256 internal constant VAULT_LIMIT = 32;
 
     function registerOperator(address operator, IBaseDSS dss) public {
         vm.startPrank(core);

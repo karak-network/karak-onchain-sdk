@@ -4,6 +4,7 @@ pragma solidity ^0.8;
 interface IStakeViewer {
     struct StakeComponent {
         address erc20;
+        address vault;
         uint256 balance;
         uint256 usdValue;
     }

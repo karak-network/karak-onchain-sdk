@@ -65,7 +65,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @notice This function returns a list of all registered operators for this DSS.
      * @return An array of addresses representing all registered operators.
      */
-    function getRegisteredOperators() public virtual returns (address[] memory) {
+    function getRegisteredOperators() public view virtual returns (address[] memory) {
         return _baseDssState().getOperators();
     }
 
@@ -74,7 +74,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @param operator The address of the operator whose vaults are being fetched.
      * @return An array of vault addresses that are not queued for withdrawal.
      */
-    function getActiveVaults(address operator) public virtual returns (address[] memory) {
+    function getActiveVaults(address operator) public view virtual returns (address[] memory) {
         return operator.fetchVaultsNotQueuedForWithdrawal();
     }
 
@@ -90,12 +90,28 @@ abstract contract BaseDSS is IBaseDSS {
         return false;
     }
 
+    /**
+     * @notice checks whether the operator is registered with dss
+     * @param operator address of the operator
+     */
+    function isOperatorRegistered(address operator) public view virtual returns (bool) {
+        return _baseDssState().isOperatorRegistered(operator);
+    }
+
+    /**
+     * @notice checks whether operator is jailed
+     * @param operator address of the operator
+     */
+    function isOperatorJailed(address operator) public view virtual returns (bool) {
+        return operator.isOperatorJailed();
+    }
+
     /* ============ Internal Functions ============ */
 
     /**
      * @notice Initializes the BaseDSS contract by setting the core contract.
      * @notice Registers the DSS with the core using the maxSlashablePercentageWad.
-     * @dev This function should be called during contract initialization or in constructor.
+     * @dev This function should be called during contract initialization not in constructor.
      * @param core The address of the core contract.
      * @param maxSlashablePercentageWad The maximum slashable percentage (in wad format) that the DSS can request.
      */
