@@ -49,7 +49,9 @@ contract KarakStakeViewerTest is OperatorHelper, MockVaults {
             abi.encode(uint80(0), int256(assetToUSD), uint256(0), uint256(0), uint80(0))
         );
         vm.mockCall(
-            address(dataFeedAggregator), abi.encodeCall(AggregatorV3Interface.decimals, ()), abi.encode(priceFeedDecimals)
+            address(dataFeedAggregator),
+            abi.encodeCall(AggregatorV3Interface.decimals, ()),
+            abi.encode(priceFeedDecimals)
         );
 
         // mock token data
