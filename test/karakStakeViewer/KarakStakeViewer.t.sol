@@ -17,6 +17,7 @@ contract KarakStakeViewerTest is OperatorHelper, MockVaults {
     uint256 maxSlashablePercentageWad = 30 * (10 ** 18);
     uint256 DEPOSIT_LIMIT = 1e50 + 7;
     uint256 assetToUSD = 2e6;
+    uint256 maxStaleness = 10000;
     uint8 priceFeedDecimals = 6;
     uint8 tokenDecimal = 6;
     mapping(address => IStakeViewer.StakeComponent) expectedVaultStakeData;
@@ -35,7 +36,8 @@ contract KarakStakeViewerTest is OperatorHelper, MockVaults {
             token,
             Oracle({
                 oracleType: OracleType.Chainlink,
-                oracle: abi.encode(ChainlinkOracle({dataFeedAggregator: dataFeedAggregator}))
+                oracle: abi.encode(ChainlinkOracle({dataFeedAggregator: dataFeedAggregator})),
+                maxStaleness: maxStaleness
             })
         );
         vm.mockCall(core, abi.encodeCall(ICore.registerDSS, maxSlashablePercentageWad), "");
@@ -49,7 +51,9 @@ contract KarakStakeViewerTest is OperatorHelper, MockVaults {
             abi.encode(uint80(0), int256(assetToUSD), uint256(0), uint256(0), uint80(0))
         );
         vm.mockCall(
-            address(dataFeedAggregator), abi.encodeCall(AggregatorV3Interface.decimals, ()), abi.encode(priceFeedDecimals)
+            address(dataFeedAggregator),
+            abi.encodeCall(AggregatorV3Interface.decimals, ()),
+            abi.encode(priceFeedDecimals)
         );
 
         // mock token data
@@ -158,5 +162,44 @@ contract KarakStakeViewerTest is OperatorHelper, MockVaults {
                 );
             }
         }
+    }
+
+    function test_fail_invalid_oracle_data(uint256 assetPrice, uint256 updatedTimestamp, uint80 roundId) public {
+        // mock oracle data
+        vm.assume(assetPrice != 0 && assetPrice < UINT256_MAX / 2);
+        vm.assume(updatedTimestamp < UINT256_MAX - maxStaleness - 1);
+        vm.mockCall(
+            address(dataFeedAggregator),
+            abi.encodeCall(AggregatorV3Interface.latestRoundData, ()),
+            abi.encode(roundId, -1 * int256(assetPrice), updatedTimestamp, updatedTimestamp, roundId)
+        );
+
+        address vault = vm.randomAddress();
+        address operator = vm.randomAddress();
+        uint256 depositAmount = vm.randomUint();
+        registerStakeAndDeposit(operator, vault, depositAmount, 0);
+        address[] memory operators = new address[](1);
+        operators[0] = operator;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(KarakStakeViewer.InvalidAssetPrice.selector, address(dataFeedAggregator), roundId)
+        );
+        karakStakeViewer.getStakeDistributionUSDForOperators(address(dss), operators, "");
+
+        vm.mockCall(
+            address(dataFeedAggregator),
+            abi.encodeCall(AggregatorV3Interface.latestRoundData, ()),
+            abi.encode(roundId, int256(assetPrice), updatedTimestamp, updatedTimestamp, roundId)
+        );
+        vm.warp(updatedTimestamp + maxStaleness + 1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                KarakStakeViewer.StaleAssetPrice.selector,
+                address(dataFeedAggregator),
+                block.timestamp - updatedTimestamp,
+                maxStaleness
+            )
+        );
+        karakStakeViewer.getStakeDistributionUSDForOperators(address(dss), operators, "");
     }
 }
