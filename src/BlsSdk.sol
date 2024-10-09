@@ -20,20 +20,11 @@ library BlsSdk {
     ///@param state the state in which registration will take place
     ///@param operator address of the operator that will be registered
     ///@param extraData an abi encoded bytes field that contains g1 pubkey, g2 pubkey, message hash and the signature
-    function operatorRegistration(
-        State storage state,
-        address operator,
-        bytes memory extraData,
-        bytes32 msgHash
-    ) external {
-        (
-            BN254.G1Point memory g1Pubkey,
-            BN254.G2Point memory g2Pubkey,
-            BN254.G1Point memory sign
-        ) = abi.decode(
-                extraData,
-                (BN254.G1Point, BN254.G2Point, BN254.G1Point)
-            );
+    function operatorRegistration(State storage state, address operator, bytes memory extraData, bytes32 msgHash)
+        external
+    {
+        (BN254.G1Point memory g1Pubkey, BN254.G2Point memory g2Pubkey, BN254.G1Point memory sign) =
+            abi.decode(extraData, (BN254.G1Point, BN254.G2Point, BN254.G1Point));
         if (state.operatorExists[operator]) revert OperatorAlreadyRegistered();
         state.operatorAddresses.push(operator);
         state.operatorExists[operator] = true;

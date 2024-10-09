@@ -3,11 +3,12 @@ pragma solidity ^0.8;
 
 import {IBaseDSS} from "./interfaces/IBaseDSS.sol";
 import {BaseDSSLib} from "./entities/BaseDSSLib.sol";
-import {OperatorLib} from "./entities/OperatorLib.sol";
+import {BaseDSSOperatorLib} from "./entities/BaseDSSOperatorLib.sol";
+import {Constants} from "./interfaces/Constants.sol";
 
 abstract contract BaseDSS is IBaseDSS {
     using BaseDSSLib for BaseDSSLib.State;
-    using OperatorLib for address;
+    using BaseDSSOperatorLib for BaseDSSOperatorLib.State;
 
     // keccak256(abi.encode(uint256(keccak256("basedss.state")) - 1)) & ~bytes32(uint256(0xff));
     bytes32 internal constant BASE_DSS_STATE_SLOT = 0x8814e3a199a7d4d18510abcafe7c07bd69c3920bf4c1a5d495d771ccc7597f00;
@@ -17,7 +18,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @notice operator registers through the `core` and the hook is called by the `core`
      * @param operator address of the operator
      */
-    function registrationHook(address operator, bytes memory) external virtual onlyCore {
+    function registrationHook(address operator, bytes memory) public virtual onlyCore {
         _baseDssState().addOperator(operator);
     }
 
@@ -27,7 +28,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @notice To fully unregister an operator from a DSS, it first needs to fully unstake all the vaults from that DSS.
      * @param operator address of the operator.
      */
-    function unregistrationHook(address operator) external virtual onlyCore {
+    function unregistrationHook(address operator) public virtual onlyCore {
         _baseDssState().removeOperator(operator);
     }
 
@@ -37,12 +38,12 @@ abstract contract BaseDSS is IBaseDSS {
      * @param newStake The vault update stake metadata
      */
     function requestUpdateStakeHook(address operator, IBaseDSS.StakeUpdateRequest memory newStake)
-        external
+        public
         virtual
         onlyCore
     {
         // Removes the vault from the state if operator initiates a unstake request.
-        if (!newStake.toStake) operator.removeVault(newStake.vault);
+        if (!newStake.toStake) _baseDssOperatorState(operator).removeVault(newStake.vault);
     }
 
     /**
@@ -51,12 +52,14 @@ abstract contract BaseDSS is IBaseDSS {
      * @param queuedStakeUpdate The vault queued update stake metadata
      */
     function finishUpdateStakeHook(address operator, IBaseDSS.QueuedStakeUpdate memory queuedStakeUpdate)
-        external
+        public
         virtual
         onlyCore
     {
         // Adds the vault in the state only if operator finalizes to stake the vault.
-        if (queuedStakeUpdate.updateRequest.toStake) operator.addVault(queuedStakeUpdate.updateRequest.vault);
+        if (queuedStakeUpdate.updateRequest.toStake) {
+            _baseDssOperatorState(operator).addVault(queuedStakeUpdate.updateRequest.vault);
+        }
     }
 
     /* ============ View Functions ============ */
@@ -75,7 +78,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @return An array of vault addresses that are not queued for withdrawal.
      */
     function getActiveVaults(address operator) public view virtual returns (address[] memory) {
-        return operator.fetchVaultsNotQueuedForWithdrawal();
+        return _baseDssOperatorState(operator).fetchVaultsNotQueuedForWithdrawal();
     }
 
     /**
@@ -84,7 +87,11 @@ abstract contract BaseDSS is IBaseDSS {
      * @return A boolean indicating whether the interface is supported.
      */
     function supportsInterface(bytes4 interfaceId) external pure virtual returns (bool) {
-        if (interfaceId == IBaseDSS.registrationHook.selector || interfaceId == IBaseDSS.unregistrationHook.selector) {
+        if (
+            interfaceId == IBaseDSS.registrationHook.selector || interfaceId == IBaseDSS.unregistrationHook.selector
+                || interfaceId == IBaseDSS.requestUpdateStakeHook.selector
+                || interfaceId == IBaseDSS.finishUpdateStakeHook.selector
+        ) {
             return true;
         }
         return false;
@@ -103,7 +110,11 @@ abstract contract BaseDSS is IBaseDSS {
      * @param operator address of the operator
      */
     function isOperatorJailed(address operator) public view virtual returns (bool) {
-        return operator.isOperatorJailed();
+        return _baseDssOperatorState(operator).isOperatorJailed();
+    }
+
+    function getCore() public view virtual returns (address) {
+        return address(_baseDssState().core);
     }
 
     /* ============ Internal Functions ============ */
@@ -124,7 +135,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @param operator The address of the operator to be jailed.
      */
     function _jailOperator(address operator) internal virtual {
-        operator.jailOperator();
+        _baseDssOperatorState(operator).jailOperator();
     }
 
     /**
@@ -132,12 +143,32 @@ abstract contract BaseDSS is IBaseDSS {
      * @param operator The address of the operator to be unjailed.
      */
     function _unjailOperator(address operator) internal virtual {
-        operator.unjailOperator();
+        _baseDssOperatorState(operator).unjailOperator();
     }
 
-    function _baseDssState() internal pure returns (BaseDSSLib.State storage $) {
+    /**
+     * @notice returns the storage pointer to BASE_DSS_STATE
+     * @dev can be overriden if required
+     */
+    function _baseDssState() internal view virtual returns (BaseDSSLib.State storage $) {
         assembly {
             $.slot := BASE_DSS_STATE_SLOT
+        }
+    }
+
+    /**
+     * @notice returns the storage pointer to BASE_DSS_OPERATOR_STATE
+     * @dev can be overriden if required
+     */
+    function _baseDssOperatorState(address operator)
+        internal
+        pure
+        virtual
+        returns (BaseDSSOperatorLib.State storage $)
+    {
+        bytes32 slot = keccak256(abi.encode(Constants.OPERATOR_STORAGE_PREFIX, operator));
+        assembly {
+            $.slot := slot
         }
     }
 
@@ -146,7 +177,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @dev Modifier that restricts access to only the core contract.
      * Reverts if the caller is not the core contract.
      */
-    modifier onlyCore() {
+    modifier onlyCore() virtual {
         if (msg.sender != address(_baseDssState().core)) {
             revert CallerNotCore();
         }

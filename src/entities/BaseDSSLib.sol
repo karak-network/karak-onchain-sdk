@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "../interfaces/ICore.sol";
@@ -9,21 +9,21 @@ library BaseDSSLib {
 
     struct State {
         /// @notice Set of operators registered with DSS
-        EnumerableSet.AddressSet operatorState;
+        EnumerableSet.AddressSet operatorSet;
         /// @notice address of the core
         ICore core;
     }
 
     function addOperator(State storage self, address operator) internal {
-        self.operatorState.add(operator);
+        self.operatorSet.add(operator);
     }
 
     function removeOperator(State storage self, address operator) internal {
-        if (self.operatorState.contains(operator)) self.operatorState.remove(operator);
+        if (self.operatorSet.contains(operator)) self.operatorSet.remove(operator);
     }
 
     function getOperators(State storage self) internal view returns (address[] memory operators) {
-        operators = self.operatorState.values();
+        operators = self.operatorSet.values();
     }
 
     function init(State storage self, address _core, uint256 maxSlashablePercentageWad) internal {
@@ -32,6 +32,6 @@ library BaseDSSLib {
     }
 
     function isOperatorRegistered(State storage self, address operator) internal view returns (bool) {
-        return self.operatorState.contains(operator);
+        return self.operatorSet.contains(operator);
     }
 }
