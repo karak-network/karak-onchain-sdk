@@ -19,7 +19,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @param operator address of the operator
      */
     function registrationHook(address operator, bytes memory) public virtual onlyCore {
-        _baseDssState().addOperator(operator);
+        baseDssStatePointer().addOperator(operator);
     }
 
     /**
@@ -29,7 +29,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @param operator address of the operator.
      */
     function unregistrationHook(address operator) public virtual onlyCore {
-        _baseDssState().removeOperator(operator);
+        baseDssStatePointer().removeOperator(operator);
     }
 
     /**
@@ -43,7 +43,7 @@ abstract contract BaseDSS is IBaseDSS {
         onlyCore
     {
         // Removes the vault from the state if operator initiates a unstake request.
-        if (!newStake.toStake) _baseDssOperatorState(operator).removeVault(newStake.vault);
+        if (!newStake.toStake) baseDssOperatorStatePointer(operator).removeVault(newStake.vault);
     }
 
     /**
@@ -58,7 +58,7 @@ abstract contract BaseDSS is IBaseDSS {
     {
         // Adds the vault in the state only if operator finalizes to stake the vault.
         if (queuedStakeUpdate.updateRequest.toStake) {
-            _baseDssOperatorState(operator).addVault(queuedStakeUpdate.updateRequest.vault);
+            baseDssOperatorStatePointer(operator).addVault(queuedStakeUpdate.updateRequest.vault);
         }
     }
 
@@ -69,7 +69,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @return An array of addresses representing all registered operators.
      */
     function getRegisteredOperators() public view virtual returns (address[] memory) {
-        return _baseDssState().getOperators();
+        return baseDssStatePointer().getOperators();
     }
 
     /**
@@ -78,7 +78,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @return An array of vault addresses that are not queued for withdrawal.
      */
     function getActiveVaults(address operator) public view virtual returns (address[] memory) {
-        return _baseDssOperatorState(operator).fetchVaultsNotQueuedForWithdrawal();
+        return baseDssOperatorStatePointer(operator).fetchVaultsNotQueuedForWithdrawal();
     }
 
     /**
@@ -102,7 +102,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @param operator address of the operator
      */
     function isOperatorRegistered(address operator) public view virtual returns (bool) {
-        return _baseDssState().isOperatorRegistered(operator);
+        return baseDssStatePointer().isOperatorRegistered(operator);
     }
 
     /**
@@ -110,11 +110,11 @@ abstract contract BaseDSS is IBaseDSS {
      * @param operator address of the operator
      */
     function isOperatorJailed(address operator) public view virtual returns (bool) {
-        return _baseDssOperatorState(operator).isOperatorJailed();
+        return baseDssOperatorStatePointer(operator).isOperatorJailed();
     }
 
-    function getCore() public view virtual returns (address) {
-        return address(_baseDssState().core);
+    function core() public view virtual returns (address) {
+        return address(baseDssStatePointer().core);
     }
 
     /* ============ Internal Functions ============ */
@@ -127,7 +127,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @param maxSlashablePercentageWad The maximum slashable percentage (in wad format) that the DSS can request.
      */
     function _init(address core, uint256 maxSlashablePercentageWad) internal virtual {
-        _baseDssState().init(core, maxSlashablePercentageWad);
+        baseDssStatePointer().init(core, maxSlashablePercentageWad);
     }
 
     /**
@@ -135,7 +135,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @param operator The address of the operator to be jailed.
      */
     function _jailOperator(address operator) internal virtual {
-        _baseDssOperatorState(operator).jailOperator();
+        baseDssOperatorStatePointer(operator).jailOperator();
     }
 
     /**
@@ -143,14 +143,14 @@ abstract contract BaseDSS is IBaseDSS {
      * @param operator The address of the operator to be unjailed.
      */
     function _unjailOperator(address operator) internal virtual {
-        _baseDssOperatorState(operator).unjailOperator();
+        baseDssOperatorStatePointer(operator).unjailOperator();
     }
 
     /**
      * @notice returns the storage pointer to BASE_DSS_STATE
      * @dev can be overriden if required
      */
-    function _baseDssState() internal view virtual returns (BaseDSSLib.State storage $) {
+    function baseDssStatePointer() internal view virtual returns (BaseDSSLib.State storage $) {
         assembly {
             $.slot := BASE_DSS_STATE_SLOT
         }
@@ -160,7 +160,7 @@ abstract contract BaseDSS is IBaseDSS {
      * @notice returns the storage pointer to BASE_DSS_OPERATOR_STATE
      * @dev can be overriden if required
      */
-    function _baseDssOperatorState(address operator)
+    function baseDssOperatorStatePointer(address operator)
         internal
         pure
         virtual
@@ -178,7 +178,7 @@ abstract contract BaseDSS is IBaseDSS {
      * Reverts if the caller is not the core contract.
      */
     modifier onlyCore() virtual {
-        if (msg.sender != address(_baseDssState().core)) {
+        if (msg.sender != address(baseDssStatePointer().core)) {
             revert CallerNotCore();
         }
         _;

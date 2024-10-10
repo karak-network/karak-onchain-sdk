@@ -19,7 +19,7 @@ contract TestDSS is BaseDSS {
     }
 
     function isOperatorJailed(address operator) public view override returns (bool) {
-        return _baseDssOperatorState(operator).isOperatorJailed();
+        return baseDssOperatorStatePointer(operator).isOperatorJailed();
     }
 
     function registrationHook(address operator, bytes memory temp) public override {
