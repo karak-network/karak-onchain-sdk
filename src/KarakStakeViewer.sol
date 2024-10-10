@@ -23,12 +23,11 @@ struct ChainlinkOracle {
 
 struct Oracle {
     OracleType oracleType;
+    uint256 maxStaleness; // Max delay in seconds before oracle data is considered stale
     bytes oracle;
 }
 
 uint8 constant USD_DECIMALS = 8;
-
-error UnsupportedOracleType();
 
 contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
     string public constant VERSION = "1.0.0";
@@ -122,14 +121,22 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
         view
         returns (uint256)
     {
-        Oracle memory oracle = _state().tokenToOracle[token];
+        State storage self = _state();
+        Oracle memory oracle = self.tokenToOracle[token];
 
         if (oracle.oracleType == OracleType.Chainlink) {
             ChainlinkOracle memory chainlinkOracle = abi.decode(oracle.oracle, (ChainlinkOracle));
 
             // TODO: Add checks and balances here to ensure the oracle and oracle data is valid
 
-            (, int256 assetPrice,,,) = chainlinkOracle.dataFeedAggregator.latestRoundData();
+            (uint80 roundId, int256 assetPrice,, uint256 updatedAt,) =
+                chainlinkOracle.dataFeedAggregator.latestRoundData();
+
+            if (assetPrice <= 0) revert InvalidAssetPrice(address(chainlinkOracle.dataFeedAggregator), roundId);
+            uint256 staleness = block.timestamp - updatedAt;
+            if (staleness > oracle.maxStaleness) {
+                revert StaleAssetPrice(address(chainlinkOracle.dataFeedAggregator), staleness, oracle.maxStaleness);
+            }
 
             uint8 assetDecimals = IERC20Metadata(token).decimals();
 
@@ -157,4 +164,9 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
 
         revert UnsupportedOracleType();
     }
+
+    /* =============== ERRORS =============== */
+    error UnsupportedOracleType();
+    error InvalidAssetPrice(address feed, uint80 rountId);
+    error StaleAssetPrice(address feed, uint256 staleness, uint256 maxStaleness);
 }

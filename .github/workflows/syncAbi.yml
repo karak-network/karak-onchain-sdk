@@ -57,6 +57,10 @@ jobs:
 
                   jq '.abi' ../out/IStakeViewer.sol/IStakeViewer.json | jq '.' > crates/contracts/abi/IStakeViewer.json
 
+                  jq '.abi' ../out/BlsSdk.sol/BlsSdk.json | jq '.' > crates/kms/tests/artifacts/BlsSdk.json
+                  
+                  jq '.abi' ../out/BlsSdk.sol/BN254.json | jq '.' > crates/kms/tests/artifacts/BN254.json
+
                   git add .
                   git commit -m "feat(contracts): update onchain SDK ABIs"
                   git push -u origin $BRANCH_NAME
