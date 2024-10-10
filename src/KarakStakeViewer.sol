@@ -23,7 +23,7 @@ struct ChainlinkOracle {
 
 struct Oracle {
     OracleType oracleType;
-    uint256 maxStaleness;
+    uint256 maxStaleness; // Max delay in seconds before oracle data is considered stale
     bytes oracle;
 }
 
