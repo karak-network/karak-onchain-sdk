@@ -26,6 +26,7 @@ library BlsSdk {
         (BN254.G1Point memory g1Pubkey, BN254.G2Point memory g2Pubkey, BN254.G1Point memory sign) =
             abi.decode(extraData, (BN254.G1Point, BN254.G2Point, BN254.G1Point));
         if (state.operatorExists[operator]) revert OperatorAlreadyRegistered();
+        state.operatorG1Pubkey[operator] = g1Pubkey;
         state.operatorAddresses.push(operator);
         state.operatorExists[operator] = true;
         state.operatorIndex[operator] = state.allOperatorPubkeyG1.length;
@@ -61,6 +62,7 @@ library BlsSdk {
 
         // removing bls key from aggregated keys
         state.aggregatedG1Pubkey = state.aggregatedG1Pubkey.plus(state.operatorG1Pubkey[operator].negate());
+        delete state.operatorG1Pubkey[operator];
     }
 
     ///@notice checks whether the paring is successful. i.e. the signature is valid
