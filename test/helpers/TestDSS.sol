@@ -4,7 +4,7 @@ pragma solidity ^0.8;
 import "../../src/BaseDSS.sol";
 
 contract TestDSS is BaseDSS {
-    using OperatorLib for address;
+    using BaseDSSOperatorLib for BaseDSSOperatorLib.State;
 
     function initialize(address core, uint256 maxSlashablePercentageWad) public {
         _init(core, maxSlashablePercentageWad);
@@ -19,6 +19,10 @@ contract TestDSS is BaseDSS {
     }
 
     function isOperatorJailed(address operator) public view override returns (bool) {
-        return operator.isOperatorJailed();
+        return baseDssOpStatePtr(operator).isOperatorJailed();
+    }
+
+    function registrationHook(address operator, bytes memory temp) public override {
+        super.registrationHook(operator, temp);
     }
 }
