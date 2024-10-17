@@ -24,5 +24,5 @@ interface IStakeViewer {
         address dss,
         address[] calldata operators,
         bytes calldata oracleSpecificData
-    ) external view returns (StakeDistribution memory);
+    ) external returns (StakeDistribution memory);
 }
