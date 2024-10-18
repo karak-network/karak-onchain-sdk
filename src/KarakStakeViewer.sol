@@ -70,7 +70,7 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
         address dss,
         address[] calldata operators,
         bytes calldata oracleSpecificData
-    ) external view returns (IStakeViewer.StakeDistribution memory) {
+    ) external returns (IStakeViewer.StakeDistribution memory) {
         IStakeViewer.StakeDistribution memory stakeDistribution;
         stakeDistribution.globalUsdValue = 0;
         stakeDistribution.operators = new IStakeViewer.OperatorStake[](operators.length);
@@ -118,13 +118,15 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
 
     function convertToUSD(address token, uint256 amount, bytes calldata oracleSpecificData)
         internal
-        view
         returns (uint256)
     {
         State storage self = _state();
         Oracle memory oracle = self.tokenToOracle[token];
 
-        if (oracle.oracleType == OracleType.Chainlink) {
+        if (oracle.oracleType == OracleType.None) {
+            emit OracleDataNotSet(token);
+            return 0;
+        } else if (oracle.oracleType == OracleType.Chainlink) {
             ChainlinkOracle memory chainlinkOracle = abi.decode(oracle.oracle, (ChainlinkOracle));
 
             // TODO: Add checks and balances here to ensure the oracle and oracle data is valid
@@ -164,6 +166,9 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
 
         revert UnsupportedOracleType();
     }
+
+    /* =============== EVENTS =============== */
+    event OracleDataNotSet(address asset);
 
     /* =============== ERRORS =============== */
     error UnsupportedOracleType();
