@@ -72,7 +72,7 @@ abstract contract BlsBaseDSS is IBaseDSS {
 
     ///@notice performs registration
     ///@param operator address of operator that will be unregistered
-    function unregistrationHook(address operator) external virtual{
+    function unregistrationHook(address operator) external virtual {
         blsBaseDssStatePtr().removeOperator(operator);
     }
 

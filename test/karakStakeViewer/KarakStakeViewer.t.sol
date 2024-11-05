@@ -6,6 +6,7 @@ import "../helpers/OperatorHelper.sol";
 import "../helpers/VaultMock.sol";
 
 import "../../src/KarakStakeViewer.sol";
+import "../helpers/MockOracle.sol";
 
 contract KarakStakeViewerTest is OperatorHelper, MockVaults {
     KarakStakeViewer karakStakeViewer;
@@ -25,7 +26,8 @@ contract KarakStakeViewerTest is OperatorHelper, MockVaults {
     uint256 expectedGlobalUSDValue;
 
     function setUp() public {
-        dataFeedAggregator = AggregatorV3Interface(vm.randomAddress());
+        MockOracle mockOracle = new MockOracle();
+        dataFeedAggregator = AggregatorV3Interface(address(mockOracle));
         proxyOwner = vm.randomAddress();
         owner = vm.randomAddress();
         token = vm.randomAddress();
@@ -201,5 +203,9 @@ contract KarakStakeViewerTest is OperatorHelper, MockVaults {
             )
         );
         karakStakeViewer.getStakeDistributionUSDForOperators(address(dss), operators, "");
+    }
+
+    function test_mock_oracle() public {
+        MockOracle mockOracle = new MockOracle();
     }
 }
