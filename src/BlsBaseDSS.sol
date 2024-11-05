@@ -18,8 +18,7 @@ abstract contract BlsBaseDSS is IBaseDSS {
     // keccak256("blsSdk.state")
     bytes32 internal constant BLS_BASE_DSS_STATE_SLOT =
         0x48bf764144336991c582aa0e94b4d726d3b4324019a2de86cdab80392c5248fc;
-    bytes32 internal immutable REGISTRATION_MESSAGE_HASH;
-    uint8 internal immutable THRESHOLD_PERCENTAGE;
+    uint8 internal THRESHOLD_PERCENTAGE;
 
     /**
      * @notice returns the storage pointer to BLS_SDK_STATE
@@ -44,7 +43,7 @@ abstract contract BlsBaseDSS is IBaseDSS {
 
     /* ============ External Functions ============ */
 
-    function kickOperator(address operator) external {
+    function kickOperator(address operator) external virtual {
         _kickOperator(operator);
     }
 
@@ -52,7 +51,7 @@ abstract contract BlsBaseDSS is IBaseDSS {
         IStakeViewer stakeViewer,
         address[] memory allOperators,
         address[] memory nonSigningOperators
-    ) public view returns (bool) {
+    ) public view virtual returns (bool) {
         uint256 allOperatorUsdStake =
             stakeViewer.getStakeDistributionUSDForOperators(address(this), allOperators, abi.encode("")).globalUsdValue;
         uint256 nonsigningOperatorUsdStake = stakeViewer.getStakeDistributionUSDForOperators(
@@ -67,13 +66,13 @@ abstract contract BlsBaseDSS is IBaseDSS {
     ///@notice performs registration
     ///@param operator address of the operator that will be registered
     ///@param extraData an abi encoded bytes field that contains g1 pubkey, g2 pubkey, message hash and the signature
-    function registrationHook(address operator, bytes memory extraData) external {
-        blsBaseDssStatePtr().addOperator(operator, extraData, REGISTRATION_MESSAGE_HASH);
+    function registrationHook(address operator, bytes memory extraData) external virtual {
+        blsBaseDssStatePtr().addOperator(operator, extraData, blsBaseDssStatePtr().registrationMessageHash);
     }
 
     ///@notice performs registration
     ///@param operator address of operator that will be unregistered
-    function unregistrationHook(address operator) external {
+    function unregistrationHook(address operator) external virtual{
         blsBaseDssStatePtr().removeOperator(operator);
     }
 
@@ -119,23 +118,23 @@ abstract contract BlsBaseDSS is IBaseDSS {
         BN254.G2Point memory g2Key,
         BN254.G1Point memory sign,
         bytes32 msgHash
-    ) public view {
+    ) public view virtual {
         BlsBaseDSSLib.verifySignature(g1Key, g2Key, sign, msgHash);
     }
 
     ///@notice returns an array of all registered operators
-    function getRegisteredOperators() external view returns (address[] memory) {
+    function getRegisteredOperators() external view virtual returns (address[] memory) {
         return blsBaseDssStatePtr().getOperators();
     }
 
     ///@notice responds with whether the operator is registered or not
     ///@param operator address of operator whose registration status will be checked
-    function isOperatorRegistered(address operator) external view returns (bool) {
+    function isOperatorRegistered(address operator) external view virtual returns (bool) {
         return blsBaseDssStatePtr().isOperatorRegistered(operator);
     }
 
     ///@notice returns an array of G1 public keys of all registered operators
-    function allOperatorsG1() external view returns (BN254.G1Point[] memory) {
+    function allOperatorsG1() external view virtual returns (BN254.G1Point[] memory) {
         return blsBaseDssStatePtr().allOperatorsG1();
     }
 
@@ -156,8 +155,24 @@ abstract contract BlsBaseDSS is IBaseDSS {
         return baseDssOpStatePtr(operator).fetchVaultsNotQueuedForWithdrawal();
     }
 
-    function operatorG1(address operator) external view returns (BN254.G1Point memory g1Point) {
+    function operatorG1(address operator) external view virtual returns (BN254.G1Point memory g1Point) {
         g1Point = blsBaseDssStatePtr().operatorG1Pubkey[operator];
+    }
+
+    /**
+     * @notice Checks if the contract supports a specific interface.
+     * @param interfaceId The interface ID to check.
+     * @return A boolean indicating whether the interface is supported.
+     */
+    function supportsInterface(bytes4 interfaceId) external pure virtual returns (bool) {
+        if (
+            interfaceId == IBaseDSS.registrationHook.selector || interfaceId == IBaseDSS.unregistrationHook.selector
+                || interfaceId == IBaseDSS.requestUpdateStakeHook.selector
+                || interfaceId == IBaseDSS.finishUpdateStakeHook.selector
+        ) {
+            return true;
+        }
+        return false;
     }
 
     /* ============ Internal Functions ============ */
@@ -170,13 +185,13 @@ abstract contract BlsBaseDSS is IBaseDSS {
     function init(
         address core,
         uint256 maxSlashablePercentageWad,
-        bytes32 registrationMessageHash,
-        uint8 thresholdPercentage
+        uint8 thresholdPercentage,
+        bytes32 registrationMessageHash
     ) internal {
         blsBaseDssStatePtr().core = ICore(core);
         blsBaseDssStatePtr().core.registerDSS(maxSlashablePercentageWad);
-        REGISTRATION_MESSAGE_HASH = registrationMessageHash;
         THRESHOLD_PERCENTAGE = thresholdPercentage;
+        blsBaseDssStatePtr().registrationMessageHash = registrationMessageHash;
     }
 
     /**

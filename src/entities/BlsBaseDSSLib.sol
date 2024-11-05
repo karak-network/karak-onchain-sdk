@@ -8,7 +8,6 @@ import {ICore} from "../interfaces/ICore.sol";
 library BlsBaseDSSLib {
     using BN254 for BN254.G1Point;
 
-    ///@notice the user of the library should initiate a storage variable that has been built on this struct
     struct State {
         ICore core;
         mapping(address operatorAddress => bool exists) operatorExists;
@@ -17,6 +16,7 @@ library BlsBaseDSSLib {
         BN254.G1Point aggregatedG1Pubkey;
         mapping(address operator => BN254.G1Point) operatorG1Pubkey;
         BN254.G1Point[] allOperatorPubkeyG1;
+        bytes32 registrationMessageHash;
     }
 
     function addOperator(State storage state, address operator, bytes memory extraData, bytes32 msgHash) internal {
