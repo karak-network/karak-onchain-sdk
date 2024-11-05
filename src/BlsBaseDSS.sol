@@ -49,11 +49,6 @@ abstract contract BlsBaseDSS is IBaseDSS {
 
     /* ============ External Functions ============ */
 
-    function init(address core, uint256 maxSlashablePercentageWad) external {
-        blsBaseDssStatePtr().core = ICore(core);
-        blsBaseDssStatePtr().core.registerDSS(maxSlashablePercentageWad);
-    }
-
     function kickOperator(address operator) external {
         _kickOperator(operator);
     }
@@ -171,6 +166,17 @@ abstract contract BlsBaseDSS is IBaseDSS {
     }
 
     /* ============ Internal Functions ============ */
+
+     /**
+    * @notice initializes the DSS
+    * @param core the core contract address
+    * @param maxSlashablePercentageWad the maximum percentage of the stake that can be slashed
+    */
+    function init(address core, uint256 maxSlashablePercentageWad) internal {
+        blsBaseDssStatePtr().core = ICore(core);
+        blsBaseDssStatePtr().core.registerDSS(maxSlashablePercentageWad);
+    }
+
 
     /**
      * @notice Puts an operator in a jailed state.
