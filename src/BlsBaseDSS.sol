@@ -57,9 +57,9 @@ abstract contract BlsBaseDSS is IBaseDSS {
         _kickOperator(operator);
     }
 
-    function isThresholdReached(IStakeViewer stakeViewer, address[] memory allOperators, address[] memory nonsigningOperators) public view returns (bool) {
+    function isThresholdReached(IStakeViewer stakeViewer, address[] memory allOperators, address[] memory nonSigningOperators) public view returns (bool) {
         uint256 allOperatorUsdStake = stakeViewer.getStakeDistributionUSDForOperators(address(this), allOperators, abi.encode("")).globalUsdValue;
-        uint256 nonsigningOperatorUsdStake = stakeViewer.getStakeDistributionUSDForOperators(address(this), nonsigningOperators, abi.encode("")).globalUsdValue;
+        uint256 nonsigningOperatorUsdStake = stakeViewer.getStakeDistributionUSDForOperators(address(this), nonSigningOperators, abi.encode("")).globalUsdValue;
 
         return nonsigningOperatorUsdStake >= (allOperatorUsdStake * THRESHOLD_PERCENTAGE / 100);
     }
