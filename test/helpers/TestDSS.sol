@@ -25,4 +25,8 @@ contract TestDSS is BaseDSS {
     function registrationHook(address operator, bytes memory temp) public override {
         super.registrationHook(operator, temp);
     }
+
+    function requestSlashingHook(address operator, uint256[] memory slashingPercentagesWad) external {}
+    function cancelSlashingHook(address operator) external {}
+    function finishSlashingHook(address operator) external {}
 }
