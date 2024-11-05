@@ -8,6 +8,7 @@ import {BN254} from "./entities/BN254.sol";
 import {ICore} from "./interfaces/ICore.sol";
 import {BaseDSSOperatorLib} from "./entities/BaseDSSOperatorLib.sol";
 import {BlsSdkLib} from "./entities/BlsSDKLib.sol";
+import {IStakeViewer} from "./interfaces/IStakeViewer.sol";
 
 abstract contract BlsBaseDSS is IBaseDSS {
     using BN254 for BN254.G1Point;
@@ -17,9 +18,11 @@ abstract contract BlsBaseDSS is IBaseDSS {
     // keccak256("blsSdk.state")
     bytes32 internal constant BLS_BASE_DSS_STATE_SLOT = 0x48bf764144336991c582aa0e94b4d726d3b4324019a2de86cdab80392c5248fc;
     bytes32 internal immutable REGISTRATION_MESSAGE_HASH;
+    uint8 internal immutable THRESHOLD_PERCENTAGE;
 
-    constructor(bytes32 registrationMessageHash) {
+    constructor(bytes32 registrationMessageHash, uint8 thresholdPercentage) {
         REGISTRATION_MESSAGE_HASH = registrationMessageHash;
+        THRESHOLD_PERCENTAGE = thresholdPercentage;
     }
 
     /**
@@ -51,6 +54,13 @@ abstract contract BlsBaseDSS is IBaseDSS {
 
     function kickOperator(address operator) external {
         _kickOperator(operator);
+    }
+
+    function isThresholdReached(IStakeViewer stakeViewer, address[] memory allOperators, address[] memory nonsigningOperators) public view returns (bool) {
+        uint256 allOperatorUsdStake = stakeViewer.getStakeDistributionUSDForOperators(address(this), allOperators, abi.encode("")).globalUsdValue;
+        uint256 nonsigningOperatorUsdStake = stakeViewer.getStakeDistributionUSDForOperators(address(this), nonsigningOperators, abi.encode("")).globalUsdValue;
+
+        return nonsigningOperatorUsdStake >= (allOperatorUsdStake * THRESHOLD_PERCENTAGE / 100);
     }
 
     /* ============= Hooks ============= */
