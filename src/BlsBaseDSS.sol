@@ -16,7 +16,8 @@ abstract contract BlsBaseDSS is IBaseDSS {
     using BaseDSSOperatorLib for BaseDSSOperatorLib.State;
 
     // keccak256("blsSdk.state")
-    bytes32 internal constant BLS_BASE_DSS_STATE_SLOT = 0x48bf764144336991c582aa0e94b4d726d3b4324019a2de86cdab80392c5248fc;
+    bytes32 internal constant BLS_BASE_DSS_STATE_SLOT =
+        0x48bf764144336991c582aa0e94b4d726d3b4324019a2de86cdab80392c5248fc;
     bytes32 internal immutable REGISTRATION_MESSAGE_HASH;
     uint8 internal immutable THRESHOLD_PERCENTAGE;
 
@@ -57,9 +58,16 @@ abstract contract BlsBaseDSS is IBaseDSS {
         _kickOperator(operator);
     }
 
-    function isThresholdReached(IStakeViewer stakeViewer, address[] memory allOperators, address[] memory nonSigningOperators) public view returns (bool) {
-        uint256 allOperatorUsdStake = stakeViewer.getStakeDistributionUSDForOperators(address(this), allOperators, abi.encode("")).globalUsdValue;
-        uint256 nonsigningOperatorUsdStake = stakeViewer.getStakeDistributionUSDForOperators(address(this), nonSigningOperators, abi.encode("")).globalUsdValue;
+    function isThresholdReached(
+        IStakeViewer stakeViewer,
+        address[] memory allOperators,
+        address[] memory nonSigningOperators
+    ) public view returns (bool) {
+        uint256 allOperatorUsdStake =
+            stakeViewer.getStakeDistributionUSDForOperators(address(this), allOperators, abi.encode("")).globalUsdValue;
+        uint256 nonsigningOperatorUsdStake = stakeViewer.getStakeDistributionUSDForOperators(
+            address(this), nonSigningOperators, abi.encode("")
+        ).globalUsdValue;
 
         return nonsigningOperatorUsdStake >= (allOperatorUsdStake * THRESHOLD_PERCENTAGE / 100);
     }
@@ -69,9 +77,7 @@ abstract contract BlsBaseDSS is IBaseDSS {
     ///@notice performs registration
     ///@param operator address of the operator that will be registered
     ///@param extraData an abi encoded bytes field that contains g1 pubkey, g2 pubkey, message hash and the signature
-    function registrationHook(address operator, bytes memory extraData)
-        external
-    {
+    function registrationHook(address operator, bytes memory extraData) external {
         blsBaseDssStatePtr().addOperator(operator, extraData, REGISTRATION_MESSAGE_HASH);
     }
 
@@ -81,7 +87,7 @@ abstract contract BlsBaseDSS is IBaseDSS {
         blsBaseDssStatePtr().removeOperator(operator);
     }
 
-     /**
+    /**
      * @notice Called by the core when an operator initiates a request to update vault's stake in the DSS.
      * @param operator The address of the operator
      * @param newStake The vault update stake metadata
@@ -166,7 +172,7 @@ abstract contract BlsBaseDSS is IBaseDSS {
 
     /* ============ Internal Functions ============ */
 
-     /**
+    /**
      * @notice Puts an operator in a jailed state.
      * @param operator The address of the operator to be jailed.
      */
@@ -198,4 +204,3 @@ abstract contract BlsBaseDSS is IBaseDSS {
         _;
     }
 }
-
