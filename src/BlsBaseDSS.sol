@@ -160,6 +160,10 @@ abstract contract BlsBaseDSS is IBaseDSS {
         return baseDssOpStatePtr(operator).fetchVaultsNotQueuedForWithdrawal();
     }
 
+    function operatorG1(address operator) external view returns (BN254.G1Point memory) {
+        return blsBaseDssStatePtr().operatorG1Pubkey[operator];
+    }
+
     /* ============ Internal Functions ============ */
 
      /**
