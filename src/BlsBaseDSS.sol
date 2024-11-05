@@ -7,12 +7,12 @@ import {Constants} from "./interfaces/Constants.sol";
 import {BN254} from "./entities/BN254.sol";
 import {ICore} from "./interfaces/ICore.sol";
 import {BaseDSSOperatorLib} from "./entities/BaseDSSOperatorLib.sol";
-import {BlsSdkLib} from "./entities/BlsSDKLib.sol";
+import {BlsBaseDSSLib} from "./entities/BlsBaseDSSLib.sol";
 import {IStakeViewer} from "./interfaces/IStakeViewer.sol";
 
 abstract contract BlsBaseDSS is IBaseDSS {
     using BN254 for BN254.G1Point;
-    using BlsSdkLib for BlsSdkLib.State;
+    using BlsBaseDSSLib for BlsBaseDSSLib.State;
     using BaseDSSOperatorLib for BaseDSSOperatorLib.State;
 
     // keccak256("blsSdk.state")
@@ -29,7 +29,7 @@ abstract contract BlsBaseDSS is IBaseDSS {
      * @notice returns the storage pointer to BLS_SDK_STATE
      * @dev can be overriden if required
      */
-    function blsSdkStatePtr() internal view virtual returns (BlsSdkLib.State storage $) {
+    function blsBaseDssStatePtr() internal view virtual returns (BlsBaseDSSLib.State storage $) {
         assembly {
             $.slot := BLS_BASE_DSS_STATE_SLOT
         }
@@ -48,8 +48,9 @@ abstract contract BlsBaseDSS is IBaseDSS {
 
     /* ============ External Functions ============ */
 
-    function initialize(address core) external {
-        blsSdkStatePtr().core = ICore(core);
+    function init(address core, uint256 maxSlashablePercentageWad) external {
+        blsBaseDssStatePtr().core = ICore(core);
+        blsBaseDssStatePtr().core.registerDSS(maxSlashablePercentageWad);
     }
 
     function kickOperator(address operator) external {
@@ -71,13 +72,13 @@ abstract contract BlsBaseDSS is IBaseDSS {
     function registrationHook(address operator, bytes memory extraData)
         external
     {
-        BlsSdkLib.addOperator(blsSdkStatePtr(), operator, extraData, REGISTRATION_MESSAGE_HASH);
+        blsBaseDssStatePtr().addOperator(operator, extraData, REGISTRATION_MESSAGE_HASH);
     }
 
     ///@notice performs registration
     ///@param operator address of operator that will be unregistered
     function unregistrationHook(address operator) external {
-        blsSdkStatePtr().removeOperator(operator);
+        blsBaseDssStatePtr().removeOperator(operator);
     }
 
      /**
@@ -123,23 +124,23 @@ abstract contract BlsBaseDSS is IBaseDSS {
         BN254.G1Point memory sign,
         bytes32 msgHash
     ) public view {
-        BlsSdkLib.verifySignature(g1Key, g2Key, sign, msgHash);
+        BlsBaseDSSLib.verifySignature(g1Key, g2Key, sign, msgHash);
     }
 
     ///@notice returns an array of all registered operators
     function getRegisteredOperators() external view returns (address[] memory) {
-        return blsSdkStatePtr().getOperators();
+        return blsBaseDssStatePtr().getOperators();
     }
 
     ///@notice responds with whether the operator is registered or not
     ///@param operator address of operator whose registration status will be checked
     function isOperatorRegistered(address operator) external view returns (bool) {
-        return blsSdkStatePtr().isOperatorRegistered(operator);
+        return blsBaseDssStatePtr().isOperatorRegistered(operator);
     }
 
     ///@notice returns an array of G1 public keys of all registered operators
     function allOperatorsG1() external view returns (BN254.G1Point[] memory) {
-        return blsSdkStatePtr().allOperatorsG1();
+        return blsBaseDssStatePtr().allOperatorsG1();
     }
 
     /**
@@ -178,7 +179,7 @@ abstract contract BlsBaseDSS is IBaseDSS {
     }
 
     function _kickOperator(address operator) internal virtual {
-        blsSdkStatePtr().removeOperator(operator);
+        blsBaseDssStatePtr().removeOperator(operator);
     }
 
     /* ============ Modifiers ============ */
@@ -187,7 +188,7 @@ abstract contract BlsBaseDSS is IBaseDSS {
      * Reverts if the caller is not the core contract.
      */
     modifier onlyCore() virtual {
-        if (msg.sender != address(blsSdkStatePtr().core)) {
+        if (msg.sender != address(blsBaseDssStatePtr().core)) {
             revert CallerNotCore();
         }
         _;
