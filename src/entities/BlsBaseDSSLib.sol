@@ -5,7 +5,7 @@ import "../interfaces/ICore.sol";
 import {BN254} from "./BN254.sol";
 import {ICore} from "../interfaces/ICore.sol";
 
-library BlsSdkLib {
+library BlsBaseDSSLib {
     using BN254 for BN254.G1Point;
 
     ///@notice the user of the library should initiate a storage variable that has been built on this struct
