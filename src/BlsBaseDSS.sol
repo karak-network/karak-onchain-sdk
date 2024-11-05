@@ -21,11 +21,6 @@ abstract contract BlsBaseDSS is IBaseDSS {
     bytes32 internal immutable REGISTRATION_MESSAGE_HASH;
     uint8 internal immutable THRESHOLD_PERCENTAGE;
 
-    constructor(bytes32 registrationMessageHash, uint8 thresholdPercentage) {
-        REGISTRATION_MESSAGE_HASH = registrationMessageHash;
-        THRESHOLD_PERCENTAGE = thresholdPercentage;
-    }
-
     /**
      * @notice returns the storage pointer to BLS_SDK_STATE
      * @dev can be overriden if required
@@ -161,22 +156,28 @@ abstract contract BlsBaseDSS is IBaseDSS {
         return baseDssOpStatePtr(operator).fetchVaultsNotQueuedForWithdrawal();
     }
 
-    function operatorG1(address operator) external view returns (BN254.G1Point memory) {
-        return blsBaseDssStatePtr().operatorG1Pubkey[operator];
+    function operatorG1(address operator) external view returns (BN254.G1Point memory g1Point) {
+        g1Point = blsBaseDssStatePtr().operatorG1Pubkey[operator];
     }
 
     /* ============ Internal Functions ============ */
 
-     /**
-    * @notice initializes the DSS
-    * @param core the core contract address
-    * @param maxSlashablePercentageWad the maximum percentage of the stake that can be slashed
-    */
-    function init(address core, uint256 maxSlashablePercentageWad) internal {
+    /**
+     * @notice initializes the DSS
+     * @param core the core contract address
+     * @param maxSlashablePercentageWad the maximum percentage of the stake that can be slashed
+     */
+    function init(
+        address core,
+        uint256 maxSlashablePercentageWad,
+        bytes32 registrationMessageHash,
+        uint8 thresholdPercentage
+    ) internal {
         blsBaseDssStatePtr().core = ICore(core);
         blsBaseDssStatePtr().core.registerDSS(maxSlashablePercentageWad);
+        REGISTRATION_MESSAGE_HASH = registrationMessageHash;
+        THRESHOLD_PERCENTAGE = thresholdPercentage;
     }
-
 
     /**
      * @notice Puts an operator in a jailed state.

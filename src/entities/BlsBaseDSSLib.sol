@@ -73,7 +73,7 @@ library BlsBaseDSSLib {
     }
 
     ///@notice returns an array of G1 public keys of all registered operators
-    function allOperatorsG1(State storage state) external view returns (BN254.G1Point[] memory) {
+    function allOperatorsG1(State storage state) internal view returns (BN254.G1Point[] memory) {
         BN254.G1Point[] memory operators = new BN254.G1Point[](state.allOperatorPubkeyG1.length);
         for (uint256 i = 0; i < state.allOperatorPubkeyG1.length; i++) {
             operators[i] = state.allOperatorPubkeyG1[i];
@@ -91,7 +91,7 @@ library BlsBaseDSSLib {
         BN254.G2Point memory g2Key,
         BN254.G1Point memory sign,
         bytes32 msgHash
-    ) public view {
+    ) internal view {
         uint256 alpha = uint256(
             keccak256(
                 abi.encode(g1Key.X, g1Key.Y, g2Key.X[0], g2Key.X[1], g2Key.Y[0], g2Key.Y[1], sign.X, sign.Y, msgHash)
