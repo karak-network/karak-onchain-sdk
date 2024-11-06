@@ -11,5 +11,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/karak-network/karak-onchain-sdk.git"
-  }
+  },
+  "packageManager": "pnpm@9.9.0"
 }
