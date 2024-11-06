@@ -4,8 +4,8 @@ pragma solidity ^0.8;
 import "@chainlink/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin-upgradeable/proxy/utils/Initializable.sol";
 
 import "./interfaces/IStakeViewer.sol";
 import "./interfaces/IKarakBaseVault.sol";
