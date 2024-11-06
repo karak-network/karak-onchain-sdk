@@ -114,10 +114,8 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
         return stakeDistribution;
     }
 
-    /* INTERNAL */
-
     function convertToUSD(address token, uint256 amount, bytes calldata oracleSpecificData)
-        internal
+        public
         view
         returns (uint256)
     {
