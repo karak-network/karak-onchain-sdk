@@ -96,7 +96,7 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
                     IERC20Metadata(vaults[j]).totalSupply() - IERC20Metadata(vaults[j]).balanceOf(vaults[j]);
                 uint256 assetBalance = IERC4626(vaults[j]).convertToAssets(sharesNotQueuedForWithdrawal);
 
-                uint256 assetUsdValue = convertToUSD(asset, assetBalance, oracleSpecificData);
+                uint256 assetUsdValue = getUSDValue(asset, assetBalance, oracleSpecificData);
 
                 stakeDistribution.operators[i].components[j].erc20 = asset;
                 stakeDistribution.operators[i].components[j].vault = vaults[j];
@@ -114,8 +114,10 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
         return stakeDistribution;
     }
 
-    function convertToUSD(address token, uint256 amount, bytes calldata oracleSpecificData)
-        public
+    /* INTERNAL */
+
+    function getUSDValue(address token, uint256 amount, bytes calldata oracleSpecificData)
+        internal
         view
         returns (uint256)
     {
