@@ -9,8 +9,9 @@ import {ICore} from "./interfaces/ICore.sol";
 import {BaseDSSOperatorLib} from "./entities/BaseDSSOperatorLib.sol";
 import {BlsBaseDSSLib} from "./entities/BlsBaseDSSLib.sol";
 import {IStakeViewer} from "./interfaces/IStakeViewer.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract BlsBaseDSS is IBaseDSS {
+abstract contract BlsBaseDSS is IBaseDSS, OwnableUpgradeable {
     using BN254 for BN254.G1Point;
     using BlsBaseDSSLib for BlsBaseDSSLib.State;
     using BaseDSSOperatorLib for BaseDSSOperatorLib.State;
@@ -182,12 +183,12 @@ abstract contract BlsBaseDSS is IBaseDSS {
      * @param core the core contract address
      * @param maxSlashablePercentageWad the maximum percentage of the stake that can be slashed
      */
-    function init(
+    function __BlsBaseDSS_init(
         address core,
         uint256 maxSlashablePercentageWad,
         uint8 thresholdPercentage,
         bytes32 registrationMessageHash
-    ) internal {
+    ) internal onlyInitializing {
         blsBaseDssStatePtr().core = ICore(core);
         blsBaseDssStatePtr().core.registerDSS(maxSlashablePercentageWad);
         THRESHOLD_PERCENTAGE = thresholdPercentage;
