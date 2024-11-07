@@ -6,7 +6,6 @@ import "../helpers/OperatorHelper.sol";
 import "../helpers/VaultMock.sol";
 
 import "../../src/KarakStakeViewer.sol";
-import "../helpers/MockOracle.sol";
 
 contract KarakStakeViewerTest is OperatorHelper, MockVaults {
     KarakStakeViewer karakStakeViewer;
