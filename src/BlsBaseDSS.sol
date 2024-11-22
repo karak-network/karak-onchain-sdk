@@ -9,7 +9,7 @@ import {ICore} from "./interfaces/ICore.sol";
 import {BaseDSSOperatorLib} from "./entities/BaseDSSOperatorLib.sol";
 import {BlsBaseDSSLib} from "./entities/BlsBaseDSSLib.sol";
 import {IStakeViewer} from "./interfaces/IStakeViewer.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 
 abstract contract BlsBaseDSS is IBaseDSS, OwnableUpgradeable {
     using BN254 for BN254.G1Point;
@@ -60,6 +60,10 @@ abstract contract BlsBaseDSS is IBaseDSS, OwnableUpgradeable {
         ).globalUsdValue;
 
         return nonsigningOperatorUsdStake >= (allOperatorUsdStake * THRESHOLD_PERCENTAGE / 100);
+    }
+
+    function registrationMessageHash() external view returns (bytes32) {
+        return blsBaseDssStatePtr().registrationMessageHash;
     }
 
     /* ============= Hooks ============= */
@@ -187,12 +191,12 @@ abstract contract BlsBaseDSS is IBaseDSS, OwnableUpgradeable {
         address core,
         uint256 maxSlashablePercentageWad,
         uint8 thresholdPercentage,
-        bytes32 registrationMessageHash
+        bytes32 _registrationMessageHash
     ) internal onlyInitializing {
         blsBaseDssStatePtr().core = ICore(core);
         blsBaseDssStatePtr().core.registerDSS(maxSlashablePercentageWad);
         THRESHOLD_PERCENTAGE = thresholdPercentage;
-        blsBaseDssStatePtr().registrationMessageHash = registrationMessageHash;
+        blsBaseDssStatePtr().registrationMessageHash = _registrationMessageHash;
     }
 
     /**
