@@ -44,7 +44,7 @@ abstract contract BlsBaseDSS is IBaseDSS, OwnableUpgradeable {
 
     /* ============ External Functions ============ */
 
-    function kickOperator(address operator) external virtual {
+    function kickOperator(address operator) external virtual onlyOwner {
         _kickOperator(operator);
     }
 
@@ -67,13 +67,13 @@ abstract contract BlsBaseDSS is IBaseDSS, OwnableUpgradeable {
     ///@notice performs registration
     ///@param operator address of the operator that will be registered
     ///@param extraData an abi encoded bytes field that contains g1 pubkey, g2 pubkey, message hash and the signature
-    function registrationHook(address operator, bytes memory extraData) external virtual {
+    function registrationHook(address operator, bytes memory extraData) external virtual onlyCore {
         blsBaseDssStatePtr().addOperator(operator, extraData, blsBaseDssStatePtr().registrationMessageHash);
     }
 
     ///@notice performs registration
     ///@param operator address of operator that will be unregistered
-    function unregistrationHook(address operator) external virtual {
+    function unregistrationHook(address operator) external virtual onlyCore {
         blsBaseDssStatePtr().removeOperator(operator);
     }
 
