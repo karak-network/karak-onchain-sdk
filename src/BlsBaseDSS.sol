@@ -62,6 +62,10 @@ abstract contract BlsBaseDSS is IBaseDSS, OwnableUpgradeable {
         return nonsigningOperatorUsdStake >= (allOperatorUsdStake * THRESHOLD_PERCENTAGE / 100);
     }
 
+    function registrationMessageHash() external view returns (bytes32) {
+        return blsBaseDssStatePtr().registrationMessageHash;
+    }
+
     /* ============= Hooks ============= */
 
     ///@notice performs registration
