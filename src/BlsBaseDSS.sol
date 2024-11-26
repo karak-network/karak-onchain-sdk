@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8;
 
-import "forge-std/console.sol";
 import {IBaseDSS} from "./interfaces/IBaseDSS.sol";
 import {Constants} from "./interfaces/Constants.sol";
 import {BN254} from "./entities/BN254.sol";

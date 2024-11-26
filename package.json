@@ -1,16 +1,16 @@
 {
-  "name": "karak-onchain-sdk",
-  "version": "1.0.0",
-  "license": "ISC",
-  "author": "",
-  "dependencies": {
-    "@chainlink/contracts": "^1.2.0",
-    "@openzeppelin/contracts": "^5.0.2",
-    "@openzeppelin/contracts-upgradeable": "^5.0.2"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/karak-network/karak-onchain-sdk.git"
-  },
-  "packageManager": "pnpm@9.9.0"
+    "name": "karak-onchain-sdk",
+    "version": "1.0.0",
+    "license": "ISC",
+    "dependencies": {
+        "@chainlink/contracts": "^1.2.0",
+        "@openzeppelin/contracts": "^5.0.2",
+        "@openzeppelin/contracts-upgradeable": "^5.0.2"
+    },
+    "files": ["src", "foundry.toml", "remappings.txt", "pnpm-lock.yaml"],
+    "packageManager": "pnpm@9.9.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/karak-network/karak-onchain-sdk.git"
+    }
 }
