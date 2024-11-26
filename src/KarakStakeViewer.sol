@@ -4,8 +4,8 @@ pragma solidity ^0.8;
 import "@chainlink/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin-upgradeable/proxy/utils/Initializable.sol";
 
 import "./interfaces/IStakeViewer.sol";
 import "./interfaces/IKarakBaseVault.sol";
@@ -96,7 +96,7 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
                     IERC20Metadata(vaults[j]).totalSupply() - IERC20Metadata(vaults[j]).balanceOf(vaults[j]);
                 uint256 assetBalance = IERC4626(vaults[j]).convertToAssets(sharesNotQueuedForWithdrawal);
 
-                uint256 assetUsdValue = convertToUSD(asset, assetBalance, oracleSpecificData);
+                uint256 assetUsdValue = getUSDValue(asset, assetBalance, oracleSpecificData);
 
                 stakeDistribution.operators[i].components[j].erc20 = asset;
                 stakeDistribution.operators[i].components[j].vault = vaults[j];
@@ -116,7 +116,7 @@ contract KarakStakeViewer is Initializable, OwnableUpgradeable, IStakeViewer {
 
     /* INTERNAL */
 
-    function convertToUSD(address token, uint256 amount, bytes calldata oracleSpecificData)
+    function getUSDValue(address token, uint256 amount, bytes calldata oracleSpecificData)
         internal
         view
         returns (uint256)
