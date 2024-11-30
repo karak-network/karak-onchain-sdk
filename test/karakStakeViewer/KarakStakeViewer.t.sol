@@ -95,6 +95,36 @@ contract KarakStakeViewerTest is OperatorHelper, MockVaults {
         validateStakeDistribution(result);
     }
 
+    function test_stake_no_oracle(
+        address operator,
+        address underlyingToken,
+        address vault,
+        uint256 depositAmount,
+        uint256 vaultSharesForWithdrawal
+    ) public {
+        vm.assume(operator != address(0) && vault != address(0));
+        vm.assume(underlyingToken != address(0) && underlyingToken != token);
+        depositAmount %= DEPOSIT_LIMIT;
+        vm.assume(depositAmount > 0);
+        vaultSharesForWithdrawal %= depositAmount;
+
+        initVault(vault, underlyingToken);
+        registerOperator(operator, dss);
+        deposit(vault, depositAmount);
+        updateVaultStakeIntoDSS(operator, dss, vault, true);
+        mockVaultSharesBalance(vault, vault, vaultSharesForWithdrawal);
+        mockConvertToAssets(vault, depositAmount - vaultSharesForWithdrawal);
+        // updateVaultStakeComponent(vault, operator, underlyingToken, 0);
+
+        address[] memory operators = new address[](1);
+        operators[0] = operator;
+        vm.expectEmit();
+        emit KarakStakeViewer.OracleDataNotSet(underlyingToken);
+        IStakeViewer.StakeDistribution memory result =
+            karakStakeViewer.getStakeDistributionUSDForOperators(address(dss), operators, "");
+        assertEq(result.globalUsdValue, 0);
+    }
+
     function registerStakeAndDeposit(
         address operator,
         address vault,
@@ -112,7 +142,7 @@ contract KarakStakeViewerTest is OperatorHelper, MockVaults {
         // mock balance of vault token
         mockVaultSharesBalance(vault, vault, vaultSharesForWithdrawal);
         mockConvertToAssets(vault, depositAmount - vaultSharesForWithdrawal);
-        updateVaultStakeComponent(vault, operator, depositAmount - vaultSharesForWithdrawal);
+        updateVaultStakeComponent(vault, operator, token, depositAmount - vaultSharesForWithdrawal);
     }
 
     function registerStakeAndDepositMultipleVaults(uint256 numOfVaults, address operator) public {
@@ -134,8 +164,11 @@ contract KarakStakeViewerTest is OperatorHelper, MockVaults {
         vm.mockCall(vault, abi.encodeCall(IERC4626.convertToAssets, (shares)), abi.encode(shares));
     }
 
-    function updateVaultStakeComponent(address vault, address operator, uint256 balance) public returns (uint256) {
-        expectedVaultStakeData[vault].erc20 = token;
+    function updateVaultStakeComponent(address vault, address operator, address underlyingToken, uint256 balance)
+        public
+        returns (uint256)
+    {
+        expectedVaultStakeData[vault].erc20 = underlyingToken;
         expectedVaultStakeData[vault].vault = vault;
         expectedVaultStakeData[vault].balance = balance;
         expectedVaultStakeData[vault].usdValue = convertTokenToUSD(balance);
